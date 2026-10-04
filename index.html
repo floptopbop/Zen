@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>SUMI v7 — splash</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100dvh;background:#070b12;overflow:hidden;
+  user-select:none;-webkit-user-select:none;touch-action:none;
+  font-family:'Share Tech Mono','IBM Plex Mono',monospace}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#build{position:fixed;top:6px;left:8px;font-size:9px;letter-spacing:0.12em;
+  color:rgba(87,242,161,0.35);z-index:20;pointer-events:none}
+#bstate{position:fixed;top:8px;right:10px;display:flex;gap:5px;z-index:20;pointer-events:none}
+.bbar{width:6px;height:42px;border-radius:3px;background:rgba(255,255,255,0.06);
+  overflow:hidden;position:relative}
+.bbar .fill{position:absolute;left:0;right:0;bottom:0;border-radius:3px;
+  transition:height 0.15s}
+#barW .fill{background:rgba(120,180,220,0.55)}
+#barP .fill{background:rgba(200,180,160,0.55)}
+.bbar-label{font-size:7px;color:rgba(255,255,255,0.2);text-align:center;margin-top:2px}
+#trayTab{position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+  z-index:11;padding:5px 20px 6px;
+  background:rgba(7,11,18,0.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-radius:10px 10px 0 0;border:1px solid rgba(87,242,161,0.15);border-bottom:none;
+  color:rgba(87,242,161,0.5);font-size:9px;letter-spacing:0.15em;
+  font-family:'IBM Plex Mono','Share Tech Mono',monospace;
+  touch-action:none;cursor:pointer}
+#tray{position:fixed;left:0;right:0;bottom:0;
+  padding:11px 14px calc(18px + env(safe-area-inset-bottom));
+  background:rgba(7,11,18,0.88);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid rgba(87,242,161,0.08);
+  display:flex;flex-direction:column;gap:9px;
+  transform:translateY(100%);
+  transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);
+  z-index:10;touch-action:none}
+#tray.visible{transform:translateY(0)}
+#disperseToggle{width:30px;height:30px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(87,242,161,0.3);font-size:10px;color:rgba(87,242,161,0.5);
+  transition:transform 0.16s,border-color 0.16s,background 0.16s;touch-action:none;cursor:pointer}
+#disperseToggle.off{border-color:rgba(216,100,80,0.4);color:rgba(216,100,80,0.6);background:rgba(120,50,40,0.12)}
+#grab{position:absolute;top:5px;left:50%;transform:translateX(-50%);
+  width:36px;height:3px;border-radius:2px;background:rgba(87,242,161,0.18)}
+#swatchRow{display:flex;gap:7px;overflow-x:auto;padding:2px 0 1px;align-items:center;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+#swatchRow::-webkit-scrollbar{display:none}
+.swatch{width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  border:2px solid rgba(255,255,255,0.12);
+  transition:transform 0.16s,border-color 0.16s}
+.swatch.active{border-color:rgba(87,242,161,0.7);transform:scale(1.18)}
+.rowDiv{width:1px;align-self:stretch;margin:2px 5px;background:rgba(170,170,170,0.08);flex-shrink:0}
+.size{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.1);transition:transform 0.16s,border-color 0.16s;touch-action:none}
+.size i{display:block;border-radius:50%;background:rgba(236,229,210,0.4)}
+.size.active{border-color:rgba(87,242,161,0.6);transform:scale(1.1)}
+.size.active i{background:rgba(236,229,210,0.7)}
+#jsonBtn{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(87,242,161,0.35);background:rgba(7,11,18,0.4);
+  color:rgba(87,242,161,0.6);font-size:15px;line-height:1;
+  transition:transform 0.16s;touch-action:none}
+#jsonBtn:active{transform:scale(0.88);border-color:rgba(87,242,161,0.7)}
+#resetBtn{width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(216,100,80,0.35);background:rgba(120,50,40,0.12);
+  color:rgba(236,229,210,0.5);font-size:15px;line-height:1;
+  transition:transform 0.16s;touch-action:none}
+#resetBtn:active{transform:scale(0.88);background:rgba(120,50,40,0.3)}
+.bstyle{width:30px;height:30px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(236,229,210,0.45);
+  transition:transform 0.16s,border-color 0.16s;touch-action:none}
+.bstyle.active{border-color:rgba(87,242,161,0.6);transform:scale(1.1);color:rgba(236,229,210,0.85)}
+#brushRow{display:flex;gap:8px;justify-content:center;align-items:center;padding:0 4px}
+#charRow{display:none;gap:18px;align-items:center;padding:2px 2px 0;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+#charRow.open{display:flex}
+#charRow::-webkit-scrollbar{display:none}
+.chr{display:flex;flex-direction:column;gap:2px;flex:1 0 82px;min-width:82px}
+.chr label{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:10px;letter-spacing:0.08em;color:#e8f3ec;text-transform:uppercase;font-weight:600}
+.chr label b{font-weight:700;color:#7dfcb4;font-size:11px}
+/* v7: live value riding the brush state. Thumb = your ceiling/gain, amber fill = what the brush is doing right now. */
+.chr label{white-space:nowrap;gap:3px}
+.chr{flex:1 0 104px;min-width:104px}
+.chr label .lv{font-weight:700;color:#ffd27a;font-size:11px;margin-left:auto}
+.chr label .lv::after{content:'/';color:rgba(236,234,210,.55);margin-left:2px}
+.chr.nolive label .lv{display:none}
+.chrDiv{width:1px;align-self:stretch;margin:2px 2px;background:rgba(236,234,210,.18);flex-shrink:0}
+.chr input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:22px;
+  background:transparent;touch-action:none;margin:0}
+.chr input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;
+  background:linear-gradient(90deg,#ffd27a 0,#ffd27a var(--live,0%),rgba(236,234,210,0.22) var(--live,0%))}
+.chr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:20px;height:20px;border-radius:50%;background:#7dfcb4;margin-top:-8px;
+  border:2px solid #0b1012;box-shadow:0 1px 5px rgba(0,0,0,.6)}
+.chr input[type=range]::-moz-range-track{height:5px;border-radius:3px;background:linear-gradient(90deg,#ffd27a 0,#ffd27a var(--live,0%),rgba(236,234,210,0.22) var(--live,0%))}
+.chr input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;
+  background:#7dfcb4;border:2px solid #0b1012}
+#charToggle{width:30px;height:30px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(236,229,210,0.45);
+  transition:transform 0.16s,border-color 0.16s;touch-action:none;cursor:pointer}
+#charToggle.on{border-color:#7dfcb4;color:#7dfcb4;transform:scale(1.1)}
+#tiltToggle{width:30px;height:30px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,0.1);font-size:13px;color:rgba(236,229,210,0.45);
+  transition:transform 0.16s,border-color 0.16s;touch-action:none;cursor:pointer}
+#tiltToggle.on{border-color:#ffd27a;color:#ffd27a;transform:scale(1.1)}
+#tiltToggle.waiting{border-color:rgba(255,210,122,0.35);color:rgba(255,210,122,0.5)}
+/* Tilt permission gate. iOS only hands out motion access from inside a real
+   click on a real button, so it gets its own screen at boot like SPLAT's. */
+#permGate{position:fixed;inset:0;z-index:80;background:rgba(18,20,20,0.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:30px;text-align:center}
+#permGate .g{font-size:30px;color:#7dfcb4;letter-spacing:.06em}
+#permGate p{color:#ece6d2;font-size:14px;line-height:1.7;max-width:300px;margin:0}
+#permGate button{font-family:inherit;font-size:14px;letter-spacing:.1em;text-transform:uppercase;
+  padding:14px 30px;border-radius:5px;cursor:pointer;background:transparent;border:2px solid #7dfcb4;color:#7dfcb4}
+#permGate button.skip{border-color:rgba(236,230,210,0.3);color:rgba(236,230,210,0.6);font-size:12px;padding:10px 22px}
+#permStatus{font-size:12px;color:#ffd27a;min-height:16px;margin:0}
+#dipRow{display:flex;gap:8px;height:64px}
+.dip,#napkin{flex:1;border-radius:6px;position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;
+  touch-action:none;-webkit-user-select:none;cursor:pointer}
+.dip .fill{position:absolute;left:0;bottom:0;right:0;height:0%;transition:none}
+.dip span,#napkin .napLabel{position:relative;z-index:2;pointer-events:none}
+#dipInk{background:#141210;color:rgba(236,229,210,0.6)}
+#dipInk .fill{background:rgba(236,229,210,0.12)}
+#dipWater{background:#1a3048;color:rgba(180,210,240,0.6)}
+#dipWater .fill{background:rgba(120,180,220,0.2)}
+#napkin{background:rgba(236,229,210,0.12);color:rgba(236,229,210,0.4);flex:1.4}
+#napCanvas{position:absolute;inset:0;width:100%;height:100%;border-radius:6px;pointer-events:none;z-index:0}
+.napZones{position:absolute;inset:0;display:flex;z-index:4;pointer-events:none}
+.napZone{flex:1}
+.napZone.mid{border-left:1px solid rgba(236,229,210,0.18);border-right:1px solid rgba(236,229,210,0.18)}
+#napkin .napLabel{font-size:0.46rem;opacity:1;color:rgba(160,150,135,0.4);letter-spacing:0.15em;z-index:5;
+  position:absolute;bottom:3px;left:50%;transform:translateX(-50%);white-space:nowrap}
+#paletteWrap{display:flex;gap:7px;position:relative}
+.palPage{display:none;gap:7px}
+.palPage.active{display:flex}
+#palToggle{width:22px;height:26px;border-radius:4px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(87,242,161,0.2);
+  color:rgba(87,242,161,0.45);font-size:16px;line-height:1;
+  touch-action:none;cursor:pointer;transition:transform 0.2s}
+#palToggle.flipped{transform:scaleX(-1)}
+
+/* ===== ENHANCEMENT LAYER — PRESENTATION ONLY ===== */
+:root{
+  --sumi-ink:#10171a;
+  --sumi-ink-soft:#1b2527;
+  --sumi-paper:#ecead2;
+  --sumi-green:#91b9a1;
+  --sumi-green-dim:rgba(145,185,161,.42);
+  --sumi-line:rgba(236,234,210,.11);
+  --sumi-glass:rgba(10,16,18,.78);
+  --sumi-shadow:0 18px 50px rgba(0,0,0,.42);
+}
+html,body{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(117,150,134,.055),transparent 42%),
+    linear-gradient(180deg,#0b1012,#11191b 68%,#0a0f11);
+}
+body{
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+#canvas{position:fixed;inset:0;touch-action:none}
+#fxCanvas{position:fixed;inset:0;z-index:7;pointer-events:none}
+#build{letter-spacing:.16em !important;text-shadow:0 1px 16px rgba(0,0,0,.7);opacity:.82}
+#bstate{filter:drop-shadow(0 4px 12px rgba(0,0,0,.25))}
+#liveStatus{
+  position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:12;
+  display:flex;align-items:center;gap:7px;padding:7px 9px;
+  border:1px solid var(--sumi-line);border-radius:10px;
+  background:rgba(9,14,16,.56);
+  backdrop-filter:blur(12px) saturate(.82);-webkit-backdrop-filter:blur(12px) saturate(.82);
+  box-shadow:0 8px 26px rgba(0,0,0,.22);
+  font:600 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.11em;color:rgba(236,234,210,.55);pointer-events:none;
+  transition:opacity .25s ease,transform .25s ease;
+}
+#liveStatus span:first-child{color:var(--sumi-green)}
+#liveStatus.pressed{transform:translateY(1px)}
+#tray{
+  box-shadow:var(--sumi-shadow),0 -1px 0 rgba(236,234,210,.055) inset;
+  background:linear-gradient(180deg,rgba(23,31,33,.93),rgba(9,14,16,.96));
+  border-top:1px solid rgba(236,234,210,.12);
+}
+#trayTab{box-shadow:0 8px 24px rgba(0,0,0,.35);border-color:rgba(236,234,210,.13) !important}
+#trayTab:active{transform:translateY(1px) scale(.985)}
+button,.btn,[role="button"]{-webkit-tap-highlight-color:transparent}
+#grab{opacity:.65;transition:opacity .2s ease,transform .2s ease}
+#tray.open #grab{opacity:.9}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}
+}
+
+/* ===== READABILITY PASS ===== */
+#build{
+  top:calc(6px + env(safe-area-inset-top));font-size:9px;
+  letter-spacing:.14em !important;color:rgba(145,185,161,.30);opacity:1;
+}
+#bstate{top:calc(8px + env(safe-area-inset-top))}
+.bbar-label{font-size:8px;color:rgba(236,234,210,.28)}
+.bbar{background:rgba(255,255,255,.07)}
+#barW .fill{background:rgba(120,180,220,.60)}
+#barP .fill{background:rgba(200,180,160,.60)}
+/* Diagnostics readout — hidden. Add ?debug to the URL if you want it back. */
+#liveStatus{
+  display:none;top:calc(26px + env(safe-area-inset-top));right:auto;left:8px;
+  padding:6px 10px;font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  letter-spacing:.08em;color:rgba(236,234,210,.88);background:rgba(9,14,16,.62);
+}
+#liveStatus.on{display:flex}
+#liveStatus span:first-child{color:#9fd3b4}
+.dip,#napkin{font-size:.62rem;letter-spacing:.10em}
+#dipInk{color:rgba(236,229,210,.85)}
+#dipWater{color:rgba(190,220,250,.9)}
+#napkin .napLabel{font-size:.56rem;color:rgba(120,112,100,.75)}
+.bstyle{font-size:15px;color:rgba(236,229,210,.65)}
+.bstyle.active{color:#fff}
+#trayTab{font-size:11px;color:rgba(145,185,161,.85)}
+#jsonBtn,#resetBtn{color:rgba(236,229,210,.9)}
+
+/* ===== SUMI-E AESTHETIC PASS (v7.4) — presentation only ===================
+   Everything below overrides the dark/terminal styling above. The tray and
+   the opening screen now sit on the same cream paper as the canvas, ink is
+   the only "UI colour", and a single vermilion — the seal-stamp red — marks
+   what's active. No green anywhere. */
+:root{
+  --washi:#ecead2;              /* the canvas paper (PAP_R/G/B) */
+  --washi-deep:#e4e0c6;
+  --sumi:#1f1c18;               /* ink */
+  --sumi-2:rgba(31,28,24,.72);
+  --sumi-3:rgba(31,28,24,.45);
+  --sumi-line:rgba(31,28,24,.16);
+  --shu:#b8402c;                /* vermilion seal red */
+  --shu-soft:rgba(184,64,44,.14);
+  --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Iowan Old Style",Georgia,serif;
+  /* Faint fibre texture so the tray reads as the same sheet, not a flat panel. */
+  --fibre:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .32  0 0 0 0 .25  0 0 0 .07 0'/></filter><rect width='160' height='160' filter='url(%23f)'/></svg>");
+}
+html,body{background:var(--washi)}
+
+/* ── top-left build tag and brush meters ── */
+#build{color:rgba(31,28,24,.22)!important;text-shadow:none;font-family:var(--serif);letter-spacing:.22em!important}
+.bbar{background:rgba(31,28,24,.08)}
+.bbar-label{color:rgba(31,28,24,.4)}
+#bstate{filter:none}
+
+/* ── opening screen: a sheet of paper with a seal ── */
+#permGate{background:var(--washi);background-image:var(--fibre);gap:18px}
+#permGate .g{font-family:var(--serif);color:var(--sumi);font-size:26px;letter-spacing:.32em;
+  display:flex;flex-direction:column;align-items:center;gap:14px}
+#permGate .g .kan{font-size:64px;letter-spacing:0;line-height:1;opacity:.9}
+#permGate .g .seal{display:inline-block;width:30px;height:30px;line-height:30px;font-size:14px;
+  letter-spacing:0;color:var(--washi);background:var(--shu);border-radius:3px;
+  transform:rotate(-4deg);margin-top:-6px;opacity:.9}
+#permGate p{font-family:var(--serif);color:var(--sumi-2);font-size:15px;line-height:1.75;max-width:290px}
+#permGate button{font-family:var(--serif);font-size:15px;letter-spacing:.14em;text-transform:none;
+  background:var(--sumi);color:var(--washi);border:none;border-radius:2px;padding:14px 34px;
+  box-shadow:0 1px 0 rgba(0,0,0,.08)}
+#permGate button:active{transform:translateY(1px)}
+#permGate button.skip{background:transparent;color:var(--sumi-2);
+  border:none;border-bottom:1px solid var(--sumi-line);border-radius:0;padding:8px 6px;font-size:14px}
+#permStatus{font-family:var(--serif);color:var(--shu);font-size:13px}
+
+/* ── tray: fades up out of the paper ── */
+#tray{
+  background:
+    var(--fibre),
+    linear-gradient(180deg,rgba(236,234,210,0) 0,rgba(236,234,210,.88) 16px,rgba(236,234,210,.97) 34px,var(--washi) 100%);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  border-top:none;box-shadow:none;
+  padding:14px 12px calc(14px + env(safe-area-inset-bottom));gap:10px;
+}
+#grab{background:var(--sumi-line);opacity:1}
+#trayTab{
+  /* A soft pool of paper behind the word, not a box — it has to read over
+     painted ink when the tray is closed. */
+  background:radial-gradient(ellipse 60% 75% at 50% 70%,rgba(236,234,210,.95) 35%,rgba(236,234,210,0) 100%);
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  border:none!important;box-shadow:none;
+  color:var(--sumi-2);font-family:var(--serif);font-size:13px;letter-spacing:.3em;
+  padding:6px 22px 4px;top:-28px;
+}
+
+/* ── swatches: condensed so the row fits a 375–414pt phone ── */
+#swatchRow{gap:4px;justify-content:space-between;overflow-x:auto;padding:4px 5px 3px}
+#paletteWrap,.palPage{gap:4px}
+/* Scales with the screen so the whole row always fits without scrolling. */
+.swatch{width:clamp(20px,5.6vw,24px);height:clamp(20px,5.6vw,24px);border:1.5px solid rgba(31,28,24,.18);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.swatch.active{border-color:var(--sumi);transform:scale(1.14);box-shadow:0 0 0 2px var(--washi),0 0 0 3.5px var(--shu)}
+#palToggle{border:1px solid var(--sumi-line);color:var(--sumi-2);width:20px;height:24px}
+.rowDiv{background:var(--sumi-line);margin:3px 3px}
+#resetBtn,#jsonBtn{width:26px;height:26px;background:transparent;border:1.5px solid var(--sumi-line);color:var(--sumi);font-size:14px}
+#resetBtn{border-color:rgba(184,64,44,.45);color:var(--shu)}
+#resetBtn:active{background:var(--shu-soft)}
+#jsonBtn:active{background:rgba(31,28,24,.06)}
+
+/* ── brush row: tiles shrink together instead of spilling off the edge ── */
+#brushRow{gap:4px;justify-content:space-between;padding:0}
+.bstyle,#disperseToggle,#charToggle,#tiltToggle,.size{
+  flex:0 1 30px;min-width:24px;width:auto;height:30px;
+  border:1.5px solid var(--sumi-line);background:transparent;
+  color:var(--sumi-2);font-family:var(--serif);font-size:16px;border-radius:3px}
+.bstyle[data-style="smudge"]{font-size:14px!important}
+.bstyle.active{background:var(--sumi);color:var(--washi);border-color:var(--sumi);transform:none}
+#disperseToggle{color:var(--sumi);border-color:rgba(31,28,24,.35)}
+#disperseToggle.off{color:var(--shu);border-color:rgba(184,64,44,.5);background:var(--shu-soft)}
+#charToggle.on{background:var(--sumi);color:var(--washi);border-color:var(--sumi);transform:none}
+#tiltToggle.on{background:var(--shu);color:var(--washi);border-color:var(--shu);transform:none}
+#tiltToggle.waiting{border-color:rgba(184,64,44,.45);color:var(--shu);background:var(--shu-soft)}
+.size{border-radius:50%;flex-basis:30px}
+.size i{background:rgba(31,28,24,.45)}
+.size.active{border-color:var(--sumi);transform:none}
+.size.active i{background:var(--sumi)}
+
+/* ── character sliders: ink thumb, vermilion live fill ── */
+#charRow{gap:16px}
+.chr label{color:var(--sumi);font-family:var(--serif);font-size:11px;letter-spacing:.1em;font-weight:600}
+.chr label b{color:var(--sumi);font-size:12px}
+.chr label .lv{color:var(--shu);font-size:12px}
+.chr label .lv::after{color:var(--sumi-3)}
+.chrDiv{background:var(--sumi-line)}
+.chr input[type=range]::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,var(--shu) 0,var(--shu) var(--live,0%),rgba(31,28,24,.14) var(--live,0%))}
+.chr input[type=range]::-moz-range-track{
+  background:linear-gradient(90deg,var(--shu) 0,var(--shu) var(--live,0%),rgba(31,28,24,.14) var(--live,0%))}
+.chr input[type=range]::-webkit-slider-thumb{background:var(--sumi);border:2px solid var(--washi);box-shadow:0 1px 3px rgba(31,28,24,.35)}
+.chr input[type=range]::-moz-range-thumb{background:var(--sumi);border:2px solid var(--washi)}
+
+/* ── ink stone, napkin, water: objects on the desk ── */
+#dipRow{height:58px;gap:7px}
+.dip,#napkin{border-radius:3px;font-family:var(--serif);font-size:.72rem;letter-spacing:.2em}
+#dipInk{background:#2E4148;color:rgba(236,234,210,.92);box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+#dipInk .fill{background:rgba(236,234,210,.14)}
+#dipWater{background:#51687a;color:#f1efdf;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+#dipWater .fill{background:rgba(241,239,223,.22)}
+#napkin{background:transparent;color:var(--sumi-2);box-shadow:inset 0 0 0 1px var(--sumi-line)}
+#napkin .napLabel{color:rgba(31,28,24,.55);font-family:var(--serif);font-size:.64rem}
+.napZone.mid{border-color:rgba(31,28,24,.1)}</style>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+<canvas id="fxCanvas" aria-hidden="true"></canvas>
+<div id="build">SUMI_v7 · SPLASH</div>
+<div id="liveStatus" aria-hidden="true"><span id="liveMode">READY</span><span id="liveLoad">INK —</span><span id="liveWater">WATER —</span><span id="liveTouch">C —</span></div>
+<div id="bstate">
+  <div><div class="bbar" id="barW"><div class="fill"></div></div><div class="bbar-label">W</div></div>
+  <div><div class="bbar" id="barP"><div class="fill"></div></div><div class="bbar-label">P</div></div>
+</div>
+<div id="tray">
+  <div id="trayTab">▲ TRAY</div>
+  <div id="grab"></div>
+  <div id="swatchRow">
+    <div id="paletteWrap">
+      <div class="palPage active" data-pal="vivid">
+        <div class="swatch active" style="background:#0d0b09" data-r="0.05" data-g="0.04" data-b="0.035"></div>
+        <div class="swatch" style="background:#FF3434" data-r="1" data-g="0.20" data-b="0.20"></div>
+        <div class="swatch" style="background:#A77E58" data-r="0.65" data-g="0.49" data-b="0.34"></div>
+        <div class="swatch" style="background:#678652" data-r="0.4" data-g="0.52" data-b="0.32"></div>
+        <div class="swatch" style="background:#2C8CEC" data-r="0.17" data-g="0.54" data-b="0.93"></div>
+        <div class="swatch" style="background:#8B45B0" data-r="0.55" data-g="0.27" data-b="0.69"></div>
+        <div class="swatch" style="background:#fffd90" data-r="1" data-g="0.99" data-b="0.56"></div>
+        <div class="swatch" style="background:#F8A7F7" data-r="0.97" data-g="0.65" data-b="0.97"></div>
+        <div class="swatch" style="background:#A8A8B0" data-r="0.66" data-g="0.66" data-b="0.69"></div>
+      </div>
+      <div class="palPage" data-pal="earth">
+        <div class="swatch" style="background:#1a1614" data-r="0.10" data-g="0.09" data-b="0.08"></div>
+        <div class="swatch" style="background:#8B3A3A" data-r="0.55" data-g="0.23" data-b="0.23"></div>
+        <div class="swatch" style="background:#765649" data-r="0.46" data-g="0.34" data-b="0.29"></div>
+        <div class="swatch" style="background:#4A5A3C" data-r="0.29" data-g="0.35" data-b="0.24"></div>
+        <div class="swatch" style="background:#4E555B" data-r="0.31" data-g="0.33" data-b="0.36"></div>
+        <div class="swatch" style="background:#5C3D6E" data-r="0.36" data-g="0.24" data-b="0.43"></div>
+        <div class="swatch" style="background:#9E5A28" data-r="0.62" data-g="0.35" data-b="0.16"></div>
+        <div class="swatch" style="background:#8A7438" data-r="0.54" data-g="0.45" data-b="0.22"></div>
+        <div class="swatch" style="background:#787878" data-r="0.47" data-g="0.47" data-b="0.47"></div>
+      </div>
+    </div>
+    <div id="palToggle">›</div>
+    <div class="rowDiv"></div>
+    <div id="resetBtn">↺</div>
+    <div id="jsonBtn" title="Load JSON">⊕</div>
+  </div>
+  <div id="brushRow">
+    <div class="bstyle active" data-style="round" title="Round">丸</div>
+    <div class="bstyle" data-style="point" title="Point">穂</div>
+    <div class="bstyle" data-style="side" title="Side">側</div>
+    <div class="bstyle" data-style="rake" title="Rake">熊</div>
+    <div class="bstyle" data-style="smudge" title="Smudge" style="font-size:11px">擦</div>
+    <div class="rowDiv"></div>
+    <div id="disperseToggle" title="Brush drain on/off">鎖</div>
+    <div id="charToggle" title="Character controls">性</div>
+    <div class="rowDiv"></div>
+    <div class="size active" data-r="3"><i style="width:5px;height:5px"></i></div>
+    <div class="size" data-r="8"><i style="width:11px;height:11px"></i></div>
+    <div class="size" data-r="20"><i style="width:19px;height:19px"></i></div>
+  </div>
+  <div id="charRow">
+    <div class="chr"><label>Chatter <span class="lv" id="lChat">0</span><b id="vChat">30</b></label><input type="range" id="sChat" min="0" max="100" step="5" value="30"></div>
+    <div class="chr"><label>Grain <span class="lv" id="lGrain">0</span><b id="vGrain">30</b></label><input type="range" id="sGrain" min="0" max="30" step="1" value="30"></div>
+    <div class="chr"><label>Heel <span class="lv" id="lHeel">0</span><b id="vHeel">600</b></label><input type="range" id="sHeel" min="0" max="600" step="5" value="600"></div>
+    <div class="chr"><label>Wet <span class="lv" id="lWet">0</span><b id="vWet">0</b></label><input type="range" id="sWet" min="0" max="100" step="1" value="0"></div>
+    <div class="chr"><label>Bloom <span class="lv" id="lBloom">0</span><b id="vBloom">100</b></label><input type="range" id="sBloom" min="0" max="200" step="1" value="200"></div>
+    <div class="chrDiv"></div>
+    <div class="chr"><label>Drop <span class="lv" id="lDrop">0</span><b id="vDrop">100</b></label><input type="range" id="sDrop" min="25" max="300" step="5" value="100"></div>
+    <div class="chr nolive"><label>Spray <span class="lv"></span><b id="vSpray">100</b></label><input type="range" id="sSpray" min="10" max="400" step="5" value="100"></div>
+    <div class="chr nolive"><label>Height <span class="lv"></span><b id="vHeight">15</b></label><input type="range" id="sHeight" min="0" max="100" step="1" value="15"></div>
+  </div>
+  <div id="dipRow">
+    <div class="dip" id="dipInk"><div class="fill"></div><span>墨 ink</span></div>
+    <div id="napkin">
+      <canvas id="napCanvas" width="200" height="100"></canvas>
+      <div class="napZones">
+        <div class="napZone"></div>
+        <div class="napZone mid"></div>
+        <div class="napZone"></div>
+      </div>
+      <span class="napLabel">巾 napkin</span>
+    </div>
+    <div class="dip" id="dipWater"><div class="fill"></div><span>水 water</span></div>
+  </div>
+</div>
+
+<script>
+(()=>{
+function hash21(x,y){let s=Math.sin(x*127.1+y*311.7)*43758.5453;return s-Math.floor(s)}
+function hash11(n){let s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s)}
+function valueNoise(x,y){const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,ux=fx*fx*(3-2*fx),uy=fy*fy*(3-2*fy),a=hash21(ix,iy),b=hash21(ix+1,iy),c=hash21(ix,iy+1),d=hash21(ix+1,iy+1);return a+(b-a)*ux+(c-a)*uy+(a-b-c+d)*ux*uy}
+
+const CELL=1;
+const WATER_CAP=1.0,PIGMENT_CAP=1.98;
+// v4: water deposit raised ~45x. The old 0.0000004 meant strokes were pigment with
+// no vehicle — nothing for the transport step to move, so every pinhole stayed a
+// pinhole. Ink still outweighs water heavily; this is a wetted brush, not a wash.
+const BRUSH_RAD=1.0,BRUSH_W_CAP=50000,BRUSH_P_CAP=40000,DEP_W=0.000018,DEP_P=0.00012;
+const INK_DARK=3.2,LAYER_COVER=6.0,PAP_R=236,PAP_G=234,PAP_B=210;
+// ═══ v7.2 SUBTRACTIVE COLOUR ═══════════════════════════════════════════════
+// Cell colour (mR/mG/mB, fR/fG/fB) is stored as ABSORBANCE per unit pigment,
+// not as an RGB colour. Every place that averages colours by pigment weight
+// (transport, rewet, smudge, splatter, fixing) therefore averages absorbance,
+// which is subtractive mixing: blue + yellow absorbs red AND blue and leaves
+// green-teal, instead of the RGB average's milky grey. Rendering is
+// Beer–Lambert: the paper's light is filtered through the ink, so layers glaze
+// (multiply) instead of covering. Computed in linear light.
+// Absorbance is measured relative to the paper, so one ordinary layer of a
+// swatch on paper reproduces that swatch — the palette keeps its tuning.
+// LAYER_COVER is no longer used (it was the opaque "newest colour wins" rule).
+const ABS_FLOOR=0.002,ABS_MAX=7.0;
+// Density curve: D = DEN_MAX·(1−exp(−P·DEN_K/DEN_MAX)). DEN_K matches the old
+// renderer's darkness for thin washes; DEN_MAX lets stacked glazes keep
+// deepening without every overlap going straight to black.
+const DEN_K=2.0,DEN_MAX=2.4,MOB_K=2.2/3.2;
+// Tinting-strength cap: an ink's strongest channel is scaled down to ABS_CAP,
+// hue unchanged. Carbon black is ~5x more absorbing than the colours; without
+// this, one density curve can't give both sumi greys and full-strength colour.
+const ABS_CAP=3.0;
+function s2l(c){return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4)}
+function l2s(c){return c<=0.0031308?c*12.92:1.055*Math.pow(c,1/2.4)-0.055}
+const PAP_LIN=[s2l(PAP_R/255),s2l(PAP_G/255),s2l(PAP_B/255)];
+function absOf(r,g,b){
+  const a=[Math.max(0,-Math.log(Math.max(ABS_FLOOR,s2l(r))/PAP_LIN[0])),
+           Math.max(0,-Math.log(Math.max(ABS_FLOOR,s2l(g))/PAP_LIN[1])),
+           Math.max(0,-Math.log(Math.max(ABS_FLOOR,s2l(b))/PAP_LIN[2]))];
+  const m=Math.max(a[0],a[1],a[2]),k=m>ABS_CAP?ABS_CAP/m:1;
+  return[Math.min(ABS_MAX,a[0]*k),Math.min(ABS_MAX,a[1]*k),Math.min(ABS_MAX,a[2]*k)]}
+// sRGB byte ⇄ linear lookup tables for the renderer.
+const S2L_LUT=new Float32Array(256);for(let i=0;i<256;i++)S2L_LUT[i]=s2l(i/255);
+const L2S_N=4096,L2S_LUT=new Uint8ClampedArray(L2S_N+1);for(let i=0;i<=L2S_N;i++)L2S_LUT[i]=Math.round(l2s(i/L2S_N)*255);
+// Cached absorbance of the current ink; recomputed only when the colour changes.
+let _absKey='',_abs=[0,0,0];
+function inkAbs(){const k=inkR+','+inkG+','+inkB;if(k!==_absKey){_absKey=k;_abs=absOf(inkR,inkG,inkB)}return _abs}
+// v4: the wet window. Evaporation and fixing slowed ~6x so mobile pigment has time
+// to actually mix with its neighbours before locking — that is where blending lives.
+// It still DRIES: this is ink on paper, not a wash that never sets.
+const SPREAD_RATE=0.55,EDGE_EVAP_MULT=0.9,HINDRANCE=0.12;
+// The v3-merged build NC liked ran EVAP ~1e-6, FIX 1e-3, SIGMA_BASE 0.95,
+// K_PIG 0.90 — endless wet window, water pooling before it bursts into dry
+// paper, fixed pigment damming the flow into blotchy blooms. v4 was the
+// opposite: dries fast, edges lock hard. v6 keeps both and picks per cell.
+// v6: these are no longer live values, they are the two ENDS of a range. Each
+// cell remembers how wet the brush was that fed it (wetF) and interpolates
+// between them per cell. That matters: if the wet/bloom behaviour were global
+// and slaved to the current brush, picking up a dry brush would retroactively
+// lock a wash you laid down five strokes ago. Per-cell means a wet stroke can
+// bloom next to a dry stroke that locks hard, on the same paper.
+const EVAP_DRY=0.00001,EVAP_WET=0.00032;   // v4 -> v3
+const FIX_DRY =0.022,FIX_WET =0.0011;    // v4 -> v3
+const SIG_DRY =0.08, SIG_WET =0.95;      // v4 -> v3
+const KPIG_DRY=0.28, KPIG_WET=0.90;      // v4 -> v3
+const SIGMA_PIN=0.30,SIGMA_GRAIN=0.12;
+const K_BASE=0.04,K_GRAIN=0.42,K_PIN=0.18;
+// Coupling gains, 0..1, straight off the Wet / Bloom sliders. 0 = ignore brush
+// wetness entirely and stay at the v4 end; 1 = a fully wet brush reaches v3.
+let WET_GAIN=1.0,BLOOM_GAIN=1.0;
+
+// ═══ v5 CHARACTER ENGINE ═══════════════════════════════════════════════════
+// Nothing below changes the brush STRUCTURE — the ellipse geometry, styleGain,
+// rake tines and skip lanes are untouched. Every term here is a multiplier on
+// the weight/request that addDeposit already computes. All three character
+// sliders are normalised so 0 = exactly stock v4 and 100 = the extreme table.
+// v6: Chatter and Grain are CEILINGS, not fixed amounts. The live value rides
+// the brush's dryness — a loaded wet brush lays down smooth, and the grain and
+// stutter come up as the brush runs dry. That is the physical relationship, so
+// it stops being a setting you have to remember to change. Heel is constant:
+// the drag on the trailing edge doesn't depend on how wet the hair is.
+let CHAT_MAX=0.30,GRAIN_MAX=0.30,HEEL=2.0;
+const DRY_CURVE=1.35;
+// v7: Heel now rides the brush LOAD (how full the belly is). A loaded brush
+// pools ink at the trailing edge; as it empties the drag lightens. The floor
+// keeps a trace of heel on a near-empty brush so the stroke never goes
+// perfectly symmetric. Pigment weighs more than water because the pooled
+// heel is ink, not vehicle.
+const HEEL_FLOOR=0.25,HEEL_LOAD_P=0.6,HEEL_LOAD_W=0.4;
+function brushLoad(){return Math.min(1,brush.p/BRUSH_P_CAP*HEEL_LOAD_P+brush.w/BRUSH_W_CAP*HEEL_LOAD_W)}
+function heelLoadK(){return HEEL_FLOOR+(1-HEEL_FLOOR)*brushLoad()}
+
+// Per-style character. bAmp/bFreq scale the existing bristle modulation,
+// heel drags weight to the trailing edge of the footprint, chat/chatFreq are
+// the along-stroke ink stutter, split is speed-driven bristle splaying,
+// catch/skip scale the existing dry-brush masks, spd is speed sensitivity,
+// water biases how much vehicle the style lays down (so the style survives
+// into the bleed, not just the footprint).
+const STYLE_CHAR={
+  round :{bAmp:1.9,bFreq:1.15,heel:0.90,chat:0.55,chatFreq:0.055,split:0.35,catch:1.35,skip:1.20,spd:1.0,water:1.00},
+  point :{bAmp:1.3,bFreq:1.60,heel:1.70,chat:0.40,chatFreq:0.038,split:0.15,catch:0.80,skip:0.70,spd:0.6,water:1.15},
+  side  :{bAmp:3.2,bFreq:0.55,heel:0.45,chat:0.90,chatFreq:0.095,split:0.70,catch:1.95,skip:2.10,spd:1.7,water:0.70},
+  rake  :{bAmp:1.0,bFreq:1.00,heel:1.15,chat:1.00,chatFreq:0.125,split:0.55,catch:1.65,skip:1.70,spd:2.0,water:0.80},
+  smudge:{bAmp:1.0,bFreq:1.00,heel:0.00,chat:0.00,chatFreq:0.000,split:0.00,catch:1.00,skip:1.00,spd:1.0,water:1.00}
+};
+function mix(base,target,amt){return base+(target-base)*amt}
+
+// Stroke-scope state. The v4 bristle phase was hashed from (gx,gy), so it
+// re-randomised on every stamp at 1.5px spacing — streaks never lined up from
+// one stamp to the next and averaged into mush. Hoisting it to the stroke is
+// what makes hairs read as continuous lines running the stroke's length.
+let strokeBristlePhase=0,strokeDist=0;
+function beginStroke(){
+  lastOrient=null;strokeDist=0;
+  strokeBristlePhase=hash11(strokeSeed*1.7+0.31)*Math.PI*2;
+}
+// v4: capillary front pressure (Wang & Rokne, Darcy). Dry paper PULLS ink outward
+// instead of merely failing to resist it. This is what makes an edge irregular
+// from the fibre texture rather than from a noise mask.
+const P0_FRONT=0.13;
+
+const canvas=document.getElementById('canvas');
+const W_PX=Math.floor(window.innerWidth),H_PX=Math.floor(window.innerHeight);
+canvas.width=W_PX;canvas.height=H_PX;
+const ctx=canvas.getContext('2d',{alpha:false});
+const NX=Math.floor(W_PX/CELL),NY=Math.floor(H_PX/CELL),N=NX*NY;
+
+const water=new Float32Array(N),mPig=new Float32Array(N),mR=new Float32Array(N),mG=new Float32Array(N),mB=new Float32Array(N);
+const fPig=new Float32Array(N),fR=new Float32Array(N),fG=new Float32Array(N),fB=new Float32Array(N);
+const tex=new Float32Array(N),absorb=new Float32Array(N),pinTex=new Float32Array(N);
+// v6: per-cell memory of the brush wetness that deposited here. Drives the
+// evaporation / fixing / capillary-threshold / pigment-damming behaviour.
+const wetF=new Float32Array(N);
+const wDelta=new Float32Array(N),pDelta=new Float32Array(N);
+const pRDelta=new Float32Array(N),pGDelta=new Float32Array(N),pBDelta=new Float32Array(N);
+const paperPixels=new Uint8ClampedArray(W_PX*H_PX*4);
+const imgData=ctx.createImageData(W_PX,H_PX);
+
+const brush={w:BRUSH_W_CAP*0.5,p:BRUSH_P_CAP*0.1};
+let brushRadius=1,inkR=0.05,inkG=0.04,inkB=0.035,brushStyle='round';
+let dirtyX0=NX,dirtyY0=NY,dirtyX1=0,dirtyY1=0,hasWet=false;
+
+// Render dirty rect — only these cells get recomposited + uploaded each frame.
+let rX0=NX,rY0=NY,rX1=-1,rY1=-1,renderPending=false,fullRepaint=true;
+function markRender(x0,y0,x1,y1){if(x0<rX0)rX0=x0;if(y0<rY0)rY0=y0;if(x1>rX1)rX1=x1;if(y1>rY1)rY1=y1;renderPending=true}
+function requestFullRepaint(){fullRepaint=true;renderPending=true}
+
+function expandDirty(x0,y0,x1,y1){
+  const a=Math.max(0,x0|0),b=Math.max(0,y0|0),c=Math.min(NX-1,Math.ceil(x1)),d=Math.min(NY-1,Math.ceil(y1));
+  if(a<dirtyX0)dirtyX0=a;if(b<dirtyY0)dirtyY0=b;if(c>dirtyX1)dirtyX1=c;if(d>dirtyY1)dirtyY1=d;
+  hasWet=true;markRender(a,b,c,d)}
+
+function generatePaper(){
+  let min=Infinity,max=-Infinity;
+  for(let gy=0;gy<NY;gy++)for(let gx=0;gx<NX;gx++){const i=gy*NX+gx;let v=valueNoise(gx*0.15,gy*0.16)*0.15+valueNoise(gx*0.4,gy*0.42)*0.30+valueNoise(gx*0.9,gy*0.95)*0.30+valueNoise(gx*2.0,gy*2.1)*0.15;v+=valueNoise(gx*0.8,gy*0.04)*0.10;tex[i]=v;if(v<min)min=v;if(v>max)max=v}
+  const range=max-min||1;for(let i=0;i<N;i++){tex[i]=(tex[i]-min)/range;absorb[i]=0.96+0.04*tex[i]}
+  pinTex.fill(0);const numLines=Math.floor(N*0.003);
+  for(let n=0;n<numLines;n++){const sx=hash21(n*1.31,n*2.17)*NX,sy=hash21(n*3.71,n*0.53)*NY,angle=hash21(n*5.13,n*7.91)*Math.PI,len=3+hash21(n*0.37,n*4.29)*8,ca=Math.cos(angle),sa=Math.sin(angle),steps=Math.ceil(len);for(let s=0;s<=steps;s++){const px=Math.round(sx+ca*s),py=Math.round(sy+sa*s);if(px>=0&&px<NX&&py>=0&&py<NY)pinTex[py*NX+px]=1}}
+  const ptCopy=new Float32Array(pinTex);for(let y=1;y<NY-1;y++)for(let x=1;x<NX-1;x++){const i=y*NX+x;pinTex[i]=(ptCopy[i]*2+ptCopy[i-1]+ptCopy[i+1]+ptCopy[i-NX]+ptCopy[i+NX])/6}
+  for(let gy=0;gy<NY;gy++)for(let gx=0;gx<NX;gx++){const t=tex[gy*NX+gx],pi=(gy*W_PX+gx)*4;paperPixels[pi]=PAP_R-t*9|0;paperPixels[pi+1]=PAP_G-t*7|0;paperPixels[pi+2]=PAP_B-t*5|0;paperPixels[pi+3]=255}
+}
+generatePaper();
+
+function clientToGrid(cx,cy){const r=canvas.getBoundingClientRect();return[(cx-r.left)/r.width*NX,(cy-r.top)/r.height*NY]}
+
+// Preallocated sample buffers — no per-cell garbage.
+let sIdx=new Int32Array(8192),sWt=new Float64Array(8192);
+function growSamples(n){let c=sIdx.length;while(c<n)c*=2;const ni=new Int32Array(c),nw=new Float64Array(c);ni.set(sIdx);nw.set(sWt);sIdx=ni;sWt=nw}
+
+function addDeposit(gx,gy,pressure,orientation,speed,sDist){
+  if(brush.w<=0&&brush.p<=0)return;
+  const ch=STYLE_CHAR[brushStyle]||STYLE_CHAR.round;
+  const sD=sDist===undefined?strokeDist:sDist;
+  // Hoisted above the footprint maths because the live character amounts derive
+  // from dryness and the swell term needs them.
+  const wFrac=brush.w/(brush.w+brush.p+1e-12),dryness=1-wFrac;
+  const dryK=Math.pow(dryness,DRY_CURVE);
+  const CHAT=CHAT_MAX*dryK,GRAIN=GRAIN_MAX*dryK;
+  pressure=Math.max(0.05,Math.min(1,pressure));
+  const baseRad=BRUSH_RAD*(brushRadius/8);
+  let a,b,orientOff=0;
+  switch(brushStyle){
+    // v4: squared, not cubed. The cube turned an eased pressure release into a
+    // cliff — the tip vanished over a couple of stamps and left detached needles
+    // on curves. b also widened so the point survives a direction change.
+    case'point':{const pSq=pressure*pressure;a=baseRad*(0.10+pSq*1.25);b=a*(0.12+pSq*0.42);break}
+    case'side':{orientOff=Math.PI*0.5;a=baseRad*(1.8+pressure*3.2);b=baseRad*(0.06+pressure*0.10);break}
+    case'rake':{a=baseRad*(0.9+pressure*1.4);b=a*(0.85+pressure*0.1);break}
+    default:{a=baseRad*(0.5+pressure*0.85);b=a*(0.80+pressure*0.12)}}
+  // v5: the loaded-hair swell is coherent along the stroke now, not a fresh
+  // random number every 1.5px. The brush breathes instead of buzzing.
+  const swell=valueNoise(sD*0.075+strokeSeed*0.41,strokeSeed*0.17);
+  const catchJitter=1.0+0.40*(1+0.9*CHAT)*(swell-0.5);
+  const squash=valueNoise(sD*0.130+strokeSeed*0.83,strokeSeed*0.29);
+  a*=catchJitter;b*=catchJitter*(1+0.15*(1+1.4*CHAT)*(squash-0.5));
+  const x0=Math.floor(gx),y0=Math.floor(gy);
+  const theta=orientation+orientOff,cosT=Math.cos(theta),sinT=Math.sin(theta);
+  // Tight AABB of the rotated 3-sigma ellipse.
+  const aa=Math.max(0.3,a),bb=Math.max(0.3,b);
+  const ac=aa*cosT,as=aa*sinT,bc=bb*cosT,bs=bb*sinT;
+  const searchX=Math.ceil(3*Math.sqrt(ac*ac+bs*bs))+2;
+  const searchY=Math.ceil(3*Math.sqrt(as*as+bc*bc))+2;
+  const spd01=Math.min(1,speed/24);
+  // v5: speed sensitivity is per-style. A rake breaks up when you move; a point
+  // brush holds together. Same term, different divisor.
+  const speedDiv=30/mix(1,ch.spd,CHAT);
+  const speedFac=1/(1+speed/speedDiv);
+  // v5: CHATTER — coherent 1D noise sampled along the stroke's arc length, so
+  // the whole stamp pulses and stutters as the brush travels. This is the
+  // "skipping over the tooth of the paper" beat that a per-cell mask can't
+  // produce, because it has to be correlated ALONG the direction of travel.
+  let chatter=1;
+  if(ch.chat>0&&CHAT>0){
+    const c=valueNoise(sD*ch.chatFreq+strokeSeed*0.13,17.3)*0.65
+           +valueNoise(sD*ch.chatFreq*2.7+strokeSeed*0.29,41.9)*0.35;
+    const gate=0.30+0.42*dryness+0.18*spd01;
+    if(c<gate)chatter=Math.max(0.05,c/gate);
+    chatter=1-(1-chatter)*ch.chat*Math.min(1.6,CHAT);
+  }
+  const xferScale=pressure*speedFac*chatter;
+  const sizeGain=Math.max(0.15,Math.min(50,(a*b)/3));
+  const styleGain=brushStyle==='side'?3.5:brushStyle==='point'?1.4:1.0;
+  let reqW=brush.w*DEP_W*xferScale*sizeGain*styleGain,reqP=brush.p*DEP_P*xferScale*sizeGain*styleGain;
+  reqP*=0.25+0.75*wFrac;reqW*=mix(1,ch.water,CHAT);
+  reqW=Math.min(reqW,brush.w);reqP=Math.min(reqP,brush.p);
+  if(reqW<1e-9&&reqP<1e-9)return;
+  const skipThresh=(dryness*dryness*0.55+Math.min(0.18,speed*0.005))*mix(1,ch.skip,CHAT);
+  const grainAmp=0.06+0.20*dryness,gBase=1-grainAmp*1.3,gMul=grainAmp*1.3;
+  const isRake=brushStyle==='rake';
+  const rakeFreq=isRake?Math.min(0.8,1.2/Math.max(0.4,baseRad*0.12)):0;
+  const tineSharp=0.6+0.4*dryness;
+  const bristleFreq=isRake?0:Math.min(0.8+0.7*GRAIN,(1.8/Math.max(0.8,baseRad*0.35))*mix(1,ch.bFreq,GRAIN));
+  // v5: splay — bristles separate as the stroke accelerates, so a fast pass is
+  // visibly hairier than a slow one at the same dryness.
+  const splay=ch.split*spd01*GRAIN*0.45;
+  const bristleAmp=Math.min(0.94,(0.08+0.75*dryness)*(brushStyle==='side'?0.45:1)*mix(1,ch.bAmp,GRAIN)+splay);
+  const bristleBase=1-bristleAmp;
+  const bristlePhase=strokeBristlePhase;
+  const warpAmp=0.4*dryness*(1+0.8*GRAIN);
+  // v5: heel — the only term that reads the ALONG-stroke axis. Every v4 stamp
+  // was symmetric front-to-back, which is why strokes looked extruded rather
+  // than dragged. Negative u is the trailing edge; weight pools there.
+  const heelAmt=ch.heel*HEEL*heelLoadK()*0.30;
+  // v4: catch is an ATTENUATION, not a kill switch. It also uses coherent noise at
+  // fibre scale instead of per-pixel white noise, so dry-brush skip happens in
+  // clumps a few cells wide — the way a bristle actually misses the paper.
+  const catchThresh=(0.30*dryness*dryness+0.05)*mix(1,ch.catch,CHAT);
+  const doSkip=skipThresh>0.012,laneScale=1/Math.max(1.2,b*0.35),skipSoft=skipThresh*1.6;
+  const edgeSteep=1+3.5*dryness;
+  let totalWt=0,ns=0;
+  let bx0=x0-searchX,by0=y0-searchY,bx1=x0+searchX,by1=y0+searchY;
+  for(let dy=-searchY;dy<=searchY;dy++){const py=y0+dy;if(py<0||py>=NY)continue;const rowOff=py*NX;
+  for(let dx=-searchX;dx<=searchX;dx++){
+    const px=x0+dx;if(px<0||px>=NX)continue;
+    const fx=px-gx,fy=py-gy,vRaw=-fx*sinT+fy*cosT;
+    const u=(fx*cosT+fy*sinT)/aa,v=vRaw/bb;
+    const norm=u*u+v*v;if(norm>9)continue;
+    let wt=Math.exp(-0.5*norm);
+    // v4: rake tines fade instead of hard-dropping 8% of cells at random.
+    if(isRake){wt*=Math.pow(Math.max(0,Math.cos(vRaw*rakeFreq*Math.PI)),tineSharp)*(0.55+0.45*valueNoise(px*0.30,py*0.30+strokeSeed))}
+    if(heelAmt!==0){wt*=Math.max(0.05,1+heelAmt*(-u))}
+    // v5: warp is coherent noise at fibre scale, not per-pixel white noise —
+    // white noise decorrelates the lanes and cancels the streaking it is
+    // supposed to bend.
+    if(bristleFreq>0){const bristleWarp=(valueNoise(px*0.14+strokeSeed*0.6,py*0.14)-0.5)*2.4*warpAmp;wt*=Math.max(0.12,bristleBase+bristleAmp*Math.cos(vRaw*bristleFreq*Math.PI+bristlePhase+bristleWarp))}
+    const idx=rowOff+px;
+    wt*=gBase+gMul*tex[idx];
+    const catchNoise=valueNoise(px*0.22+strokeSeed*0.11,py*0.22-strokeSeed*0.07);
+    if(catchNoise<catchThresh){wt*=0.15+0.85*(catchNoise/catchThresh)}
+    if(doSkip){const lane=Math.round(vRaw*laneScale);const laneNoise=hash21(lane*7.13+strokeSeed,lane*3.71-strokeSeed*0.7);if(laneNoise<skipThresh)wt*=0.08;else if(laneNoise<skipSoft)wt*=0.35}
+    if(norm>1.0){const edgeJitter=1+hash21(px*9.1+strokeSeed,py*4.3)*0.8*dryness;wt*=Math.pow(Math.max(0,1-norm/(9*edgeJitter)),edgeSteep)}
+    if(wt<0.005)continue;
+    if(ns>=sIdx.length)growSamples(ns+1);
+    sIdx[ns]=idx;sWt[ns]=wt;ns++;totalWt+=wt}}
+  // v4: splatter density cut from 7 to 3 — the stray dots across bare paper were
+  // this, firing on every stamp at 1.5-unit spacing.
+  if(speed>2&&dryness<0.8){const splatCount=Math.floor(hash21(gx+strokeSeed,gy-strokeSeed)*3*wFrac*pressure*(1+speed*0.05));for(let sp=0;sp<splatCount;sp++){const angle=hash21(sp*13.7+strokeSeed,sp*7.3+gx)*Math.PI*2;const dist=Math.max(a,b)*(1.5+hash21(sp*3.1+strokeSeed,sp*11.9)*4.0);const spx=Math.round(gx+Math.cos(angle)*dist),spy=Math.round(gy+Math.sin(angle)*dist);if(spx>=0&&spx<NX&&spy>=0&&spy<NY){const spWt=0.2+hash21(sp*5.7,strokeSeed)*0.35;const add=spWt*totalWt*0.012;if(ns>=sIdx.length)growSamples(ns+1);sIdx[ns]=spy*NX+spx;sWt[ns]=add;ns++;totalWt+=add;
+    if(spx<bx0)bx0=spx;if(spy<by0)by0=spy;if(spx>bx1)bx1=spx;if(spy>by1)by1=spy}}}
+  if(totalWt<=0)return;
+  let appliedW=0,appliedP=0;
+  const IA=inkAbs(),iaR=IA[0],iaG=IA[1],iaB=IA[2];
+  for(let s=0;s<ns;s++){const si=sIdx[s];const frac=sWt[s]/totalWt;let wAdd=reqW*frac,pAdd=reqP*frac;
+    const incomingWet=wAdd;if(incomingWet>0.01&&fPig[si]>0.01){const rewetStrength=Math.min(0.35,incomingWet*0.15);const dissolved=fPig[si]*rewetStrength;const ex=mPig[si];const tot=ex+dissolved;if(tot>0){const ew=ex/tot,nw=dissolved/tot;mR[si]=mR[si]*ew+fR[si]*nw;mG[si]=mG[si]*ew+fG[si]*nw;mB[si]=mB[si]*ew+fB[si]*nw;mPig[si]=tot}fPig[si]=Math.max(0,fPig[si]-dissolved)}
+    const resist=Math.min(0.5,fPig[si]/PIGMENT_CAP);wAdd*=(1-resist*0.25);pAdd*=(1-resist*0.25);
+    const room=Math.max(0,WATER_CAP-water[si]);if(wAdd>room){const sc=room/(wAdd+1e-12);wAdd*=sc;pAdd*=sc}if(wAdd<1e-12&&pAdd<1e-12)continue;
+    // v6: blend this cell's wetness memory toward the brush's current ratio, in
+    // proportion to how much of the cell's water is newly arrived.
+    if(wAdd>0){const kk=Math.min(1,wAdd/(water[si]+wAdd+1e-9));wetF[si]=wetF[si]*(1-kk)+wFrac*kk}
+    water[si]+=wAdd;const existing=mPig[si];const total=existing+pAdd;if(total>0){const ew=existing/total,nw=pAdd/total;mR[si]=mR[si]*ew+iaR*nw;mG[si]=mG[si]*ew+iaG*nw;mB[si]=mB[si]*ew+iaB*nw}mPig[si]=total;appliedW+=wAdd;appliedP+=pAdd}
+  if(disperseOn){brush.w=Math.max(0,brush.w-appliedW);brush.p=Math.max(0,brush.p-appliedP)}
+  expandDirty(bx0,by0,bx1,by1);
+}
+
+const smudgeBuf={r:0,g:0,b:0,amt:0};const SMUDGE_PICKUP=0.15,SMUDGE_DEPOSIT=0.65,SMUDGE_DECAY=0.9;
+let cIdx=new Int32Array(4096),cWt=new Float64Array(4096);
+function growCells(nn){let c=cIdx.length;while(c<nn)c*=2;const ni=new Int32Array(c),nw=new Float64Array(c);ni.set(cIdx);nw.set(cWt);cIdx=ni;cWt=nw}
+function smudgeDab(gx,gy,pressure){const baseRad=BRUSH_RAD*(brushRadius/12);const rad=baseRad*(3.7+pressure*1.0);const search=Math.ceil(rad*2.5)+1;const x0=Math.floor(gx),y0=Math.floor(gy);let pickR=0,pickG=0,pickB=0,pickAmt=0,totalWt=0,nc=0;for(let dy=-search;dy<=search;dy++)for(let dx=-search;dx<=search;dx++){const px=x0+dx,py=y0+dy;if(px<0||px>=NX||py<0||py>=NY)continue;const fx=px-gx,fy=py-gy,dist2=fx*fx+fy*fy,r2=rad*rad;if(dist2>r2*4)continue;const wt=Math.exp(-0.5*dist2/Math.max(0.5,r2));if(wt<0.01)continue;const idx=py*NX+px;if(nc>=cIdx.length)growCells(nc+1);cIdx[nc]=idx;cWt[nc]=wt;nc++;totalWt+=wt;const lift=fPig[idx]*SMUDGE_PICKUP*pressure*wt;if(lift>0.0001){pickR+=fR[idx]*lift;pickG+=fG[idx]*lift;pickB+=fB[idx]*lift;pickAmt+=lift;fPig[idx]=Math.max(0,fPig[idx]-lift)}}
+  if(pickAmt>0.0001){const total=smudgeBuf.amt+pickAmt;const ew=smudgeBuf.amt/total,nw=pickAmt/total;smudgeBuf.r=smudgeBuf.r*ew+(pickR/pickAmt)*nw;smudgeBuf.g=smudgeBuf.g*ew+(pickG/pickAmt)*nw;smudgeBuf.b=smudgeBuf.b*ew+(pickB/pickAmt)*nw;smudgeBuf.amt=total}
+  if(smudgeBuf.amt>0.001&&totalWt>0){const deposit=smudgeBuf.amt*SMUDGE_DEPOSIT;for(let c=0;c<nc;c++){const ci=cIdx[c];const frac=cWt[c]/totalWt;const pAdd=deposit*frac;if(pAdd<0.0001)continue;const existing=fPig[ci];const tot=existing+pAdd;const ew=existing/tot,nw=pAdd/tot;fR[ci]=fR[ci]*ew+smudgeBuf.r*nw;fG[ci]=fG[ci]*ew+smudgeBuf.g*nw;fB[ci]=fB[ci]*ew+smudgeBuf.b*nw;fPig[ci]=Math.min(PIGMENT_CAP,tot)}smudgeBuf.amt=Math.max(0,smudgeBuf.amt-deposit)}
+  smudgeBuf.amt*=SMUDGE_DECAY;const smWet=brush.w/(brush.w+brush.p+1e-12);if(totalWt>0){for(let c=0;c<nc;c++){const ci=cIdx[c];const add=0.02*pressure*cWt[c]/totalWt;if(add>0){const kk=Math.min(1,add/(water[ci]+add+1e-9));wetF[ci]=wetF[ci]*(1-kk)+smWet*kk}water[ci]=Math.min(WATER_CAP,water[ci]+add)}}expandDirty(x0-search,y0-search,x0+search,y0+search)}
+
+// v4: orientation is carried across segments and slewed, then interpolated per
+// stamp. drawSegment used to hand every stamp one angle computed cold from the
+// segment endpoints; on a curve, consecutive segments differ enough that the
+// point brush's needles crossed at the shared endpoint. That was the star.
+let lastOrient=null;
+function drawSegment(x0,y0,x1,y1,pressure){
+  const dx=x1-x0,dy=y1-y0,dist=Math.hypot(dx,dy);if(dist<0.001)return;
+  const orient=Math.atan2(dy,dx);
+  let o0=lastOrient,o1=orient;
+  if(o0===null){o0=orient}
+  else{let d=((orient-o0+Math.PI*3)%(Math.PI*2))-Math.PI;o1=o0+d*0.35}
+  lastOrient=o1;
+  const steps=Math.max(1,Math.ceil(dist/1.5));
+  const base=strokeDist;
+  for(let i=1;i<=steps;i++){const t=i/steps;
+    if(brushStyle==='smudge')smudgeDab(x0+dx*t,y0+dy*t,pressure);
+    else addDeposit(x0+dx*t,y0+dy*t,pressure,o0+(o1-o0)*t,dist,base+dist*t)}
+  strokeDist=base+dist}
+
+function simulateStep(){
+  if(!hasWet)return;
+  const margin=2;
+  const sx0=Math.max(1,dirtyX0-margin),sy0=Math.max(1,dirtyY0-margin);
+  const sx1=Math.min(NX-2,dirtyX1+margin),sy1=Math.min(NY-2,dirtyY1+margin);
+  if(sx1<sx0||sy1<sy0){hasWet=false;dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0;return}
+  markRender(sx0,sy0,sx1,sy1);
+  for(let y=sy0;y<=sy1;y++){const row=y*NX;for(let x=sx0;x<=sx1;x++){const i=row+x;wDelta[i]=0;pDelta[i]=0;pRDelta[i]=0;pGDelta[i]=0;pBDelta[i]=0}}
+
+  for(let y=sy0;y<=sy1;y++){for(let x=sx0;x<=sx1;x++){
+    const i=y*NX+x;const w=water[i];if(w<0.001)continue;
+    // v6: bloom terms interpolate per cell on its remembered brush wetness.
+    const bfI=wetF[i]*BLOOM_GAIN;
+    const kPigI=KPIG_DRY+(KPIG_WET-KPIG_DRY)*bfI;
+    const sigBase=SIG_DRY+(SIG_WET-SIG_DRY)*bfI;
+    const kSrc=K_BASE+K_GRAIN*tex[i]+kPigI*Math.min(1,fPig[i]/PIGMENT_CAP)+K_PIN*pinTex[i];
+    const pigConc=mPig[i]/(w+0.001);
+    const nb=[i-1,i+1,i-NX,i+NX];
+    for(let n=0;n<4;n++){const j=nb[n];
+      let diff;
+      if(water[j]<0.001){
+        const sigma=sigBase+SIGMA_PIN*pinTex[j]+SIGMA_GRAIN*tex[j];
+        if(w<sigma)continue;
+        // Front node: capillary suction pulls into the dry cell. Loose fibre
+        // (low tex) sucks harder, so the advancing edge frays along the grain.
+        diff=w+P0_FRONT*(1-tex[j]);
+      }else{
+        diff=w-water[j];
+      }
+      if(diff<=0)continue;
+      const kPigJ=KPIG_DRY+(KPIG_WET-KPIG_DRY)*wetF[j]*BLOOM_GAIN;
+      const kDst=K_BASE+K_GRAIN*tex[j]+kPigJ*Math.min(1,fPig[j]/PIGMENT_CAP)+K_PIN*pinTex[j];
+      const kAvg=(kSrc+kDst)*0.5;
+      let flow=SPREAD_RATE*diff*(1-kAvg);flow=Math.min(flow,w*0.12);if(flow<=0)continue;
+      wDelta[i]-=flow;wDelta[j]+=flow;
+      // The wetness class travels with the water, so a bloom stays a bloom as
+      // it advances into dry paper instead of reverting at the front.
+      if(flow>0){const kk=Math.min(1,flow/(water[j]+flow+1e-9));wetF[j]=wetF[j]*(1-kk)+wetF[i]*kk}
+      let pigFlow=flow*pigConc*(1-HINDRANCE*tex[i]);pigFlow=Math.min(pigFlow,mPig[i]*0.12);
+      if(pigFlow<=0.0001)continue;
+      pDelta[i]-=pigFlow;pDelta[j]+=pigFlow;
+      const tr=pigFlow*mR[i],tg=pigFlow*mG[i],tb=pigFlow*mB[i];
+      pRDelta[i]-=tr;pGDelta[i]-=tg;pBDelta[i]-=tb;
+      pRDelta[j]+=tr;pGDelta[j]+=tg;pBDelta[j]+=tb}}}
+
+  for(let y=sy0;y<=sy1;y++){for(let x=sx0;x<=sx1;x++){
+    const i=y*NX+x;
+    const oldPig=mPig[i],oldR=oldPig*mR[i],oldG=oldPig*mG[i],oldB=oldPig*mB[i];
+    const newPig=Math.max(0,oldPig+pDelta[i]);
+    water[i]=Math.max(0,water[i]+wDelta[i]);
+    if(newPig>0.000001){const newR=Math.max(0,oldR+pRDelta[i]),newG=Math.max(0,oldG+pGDelta[i]),newB=Math.max(0,oldB+pBDelta[i]);
+      mPig[i]=newPig;mR[i]=Math.min(ABS_MAX,Math.max(0,newR/newPig));mG[i]=Math.min(ABS_MAX,Math.max(0,newG/newPig));mB[i]=Math.min(ABS_MAX,Math.max(0,newB/newPig))
+    }else{mPig[i]=0;mR[i]=0;mG[i]=0;mB[i]=0}}}
+
+  let stillWet=false,newX0=NX,newY0=NY,newX1=0,newY1=0;
+  for(let y=sy0;y<=sy1;y++){for(let x=sx0;x<=sx1;x++){
+    const i=y*NX+x;const w=water[i];
+    if(w<0.001&&mPig[i]<0.001)continue;
+    if(w>0.001){
+      stillWet=true;
+      if(x<newX0)newX0=x;if(y<newY0)newY0=y;if(x>newX1)newX1=x;if(y>newY1)newY1=y;
+      let wetN=0;if(water[i-1]>0.01)wetN++;if(water[i+1]>0.01)wetN++;if(water[i-NX]>0.01)wetN++;if(water[i+NX]>0.01)wetN++;
+      // Edge cells dry fastest, so pigment strands there — this is the dark rim
+      // that reads as ink rather than watercolour. Kept strong on purpose.
+      const edgeFac=1+(4-wetN)*EDGE_EVAP_MULT;
+      const bf=wetF[i]*WET_GAIN;
+      const evapR=EVAP_DRY*Math.pow(EVAP_WET/EVAP_DRY,bf);
+      const fixR =FIX_DRY *Math.pow(FIX_WET /FIX_DRY ,bf);
+      // v6: slow relaxation of the wetness memory. Without it a fully wet cell
+      // has an evaporation rate of 3.2e-4 forever and the canvas never truly
+      // settles. This keeps the long v3 wet window but guarantees it ends.
+      wetF[i]*=0.9994;
+      water[i]=Math.max(0,w-evapR*w*edgeFac);
+      const dry=1-water[i]/WATER_CAP;
+      const fix=fixR*dry*dry*absorb[i];
+      const pRoom=Math.max(0,PIGMENT_CAP-fPig[i]);
+      const amount=Math.min(mPig[i]*fix,pRoom);
+      if(amount>0.0001){
+        const existing=fPig[i];
+        const total=existing+amount;
+        // v7.2: glaze. Pigment-weighted absorbance, so a dried layer and the
+        // one fixing on top of it both keep filtering the light.
+        const ew=existing/total,nw=amount/total;
+        fR[i]=fR[i]*ew+mR[i]*nw;fG[i]=fG[i]*ew+mG[i]*nw;fB[i]=fB[i]*ew+mB[i]*nw;
+        fPig[i]=total;
+        mPig[i]-=amount}}
+    if(water[i]<0.005&&mPig[i]>0.001){
+      const lockAmt=Math.min(mPig[i],Math.max(0,PIGMENT_CAP-fPig[i]));
+      if(lockAmt>0){const ex=fPig[i],tot=ex+lockAmt;
+        if(tot>0){
+          const ew=ex/tot,nw=lockAmt/tot;
+          fR[i]=fR[i]*ew+mR[i]*nw;fG[i]=fG[i]*ew+mG[i]*nw;fB[i]=fB[i]*ew+mB[i]*nw;
+          fPig[i]=tot}}
+      mPig[i]=0;mR[i]=0;mG[i]=0;mB[i]=0;water[i]=0;wetF[i]=0}}}
+  if(stillWet){dirtyX0=Math.max(0,newX0-2);dirtyY0=Math.max(0,newY0-2);dirtyX1=Math.min(NX-1,newX1+2);dirtyY1=Math.min(NY-1,newY1+2)}
+  else{hasWet=false;dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0}
+}
+
+// Dirty-rect renderer — only touched cells recomposite and upload.
+function render(){
+  if(fullRepaint){rX0=0;rY0=0;rX1=NX-1;rY1=NY-1;fullRepaint=false;renderPending=true}
+  if(!renderPending)return;
+  const x0=Math.max(0,rX0),y0=Math.max(0,rY0),x1=Math.min(NX-1,rX1),y1=Math.min(NY-1,rY1);
+  rX0=NX;rY0=NY;rX1=-1;rY1=-1;renderPending=false;
+  if(x1<x0||y1<y0)return;
+  const px=imgData.data;
+  for(let y=y0;y<=y1;y++){
+    const row=y*NX,s0=(row+x0)*4,s1=(row+x1+1)*4;
+    px.set(paperPixels.subarray(s0,s1),s0);
+    for(let x=x0;x<=x1;x++){
+      const i=row+x;const fp=fPig[i],mp=mPig[i],w=water[i];
+      if(fp<0.003&&mp<0.003&&w<0.01)continue;
+      const pi=i*4;let r=px[pi],g=px[pi+1],b=px[pi+2];
+      // v7.2: Beer–Lambert. Fixed and mobile ink share one optical path, so wet
+      // colour over dry colour already reads as the mix it will dry to.
+      const mw=mp*MOB_K,P=fp+mw;
+      if(P>0.003){
+        const inv=1/P;
+        const aR=(fR[i]*fp+mR[i]*mw)*inv,aG=(fG[i]*fp+mG[i]*mw)*inv,aB=(fB[i]*fp+mB[i]*mw)*inv;
+        const D=DEN_MAX*(1-Math.exp(-P*DEN_K/DEN_MAX));
+        r=L2S_LUT[Math.min(L2S_N,(S2L_LUT[r]*Math.exp(-aR*D)*L2S_N)|0)];
+        g=L2S_LUT[Math.min(L2S_N,(S2L_LUT[g]*Math.exp(-aG*D)*L2S_N)|0)];
+        b=L2S_LUT[Math.min(L2S_N,(S2L_LUT[b]*Math.exp(-aB*D)*L2S_N)|0)];
+      }
+      if(w>0.02){const sheen=Math.min(0.12,w*0.08);r=Math.min(255,r*(1+sheen)+sheen*6);g=Math.min(255,g*(1+sheen)+sheen*8);b=Math.min(255,b*(1+sheen)+sheen*14)}
+      px[pi]=r|0;px[pi+1]=g|0;px[pi+2]=b|0}}
+  ctx.putImageData(imgData,0,0,x0,y0,x1-x0+1,y1-y0+1);
+}
+
+// ═══ TRAY UI ═══
+const tray=document.getElementById('tray');
+const fillInk=document.querySelector('#dipInk .fill'),fillWater=document.querySelector('#dipWater .fill');
+const barWFill=document.querySelector('#barW .fill'),barPFill=document.querySelector('#barP .fill');
+let _lastWp=-1,_lastPp=-1;
+function updateFills(){const wp=Math.round(brush.w/BRUSH_W_CAP*100),pp=Math.round(brush.p/BRUSH_P_CAP*100);
+  if(wp===_lastWp&&pp===_lastPp)return;_lastWp=wp;_lastPp=pp;
+  fillWater.style.height=wp+'%';fillInk.style.height=pp+'%';
+  barWFill.style.height=Math.min(100,wp)+'%';barPFill.style.height=Math.min(100,pp)+'%';
+  refreshLiveChar()}
+// v7: the character sliders show what the brush is doing right now. The thumb
+// is still your setting (a ceiling for Chatter/Grain/Heel, a gain for Wet/Bloom);
+// the amber fill and the amber number are the live amount at the current load.
+// These are exactly the values addDeposit uses for the next stamp.
+const _live=[];
+function refreshLiveChar(){
+  if(!_live.length){[['sChat','lChat'],['sGrain','lGrain'],['sHeel','lHeel'],['sWet','lWet'],['sBloom','lBloom'],['sDrop','lDrop']].forEach(([s,l])=>{const el=document.getElementById(s),out=document.getElementById(l);if(el&&out)_live.push({el,out,id:s})});if(!_live.length)return}
+  const wFrac=brush.w/(brush.w+brush.p+1e-12),dryK=Math.pow(1-wFrac,DRY_CURVE),hk=heelLoadK();
+  for(const o of _live){const v=Number(o.el.value);let k;
+    switch(o.id){case'sChat':case'sGrain':k=dryK;break;case'sHeel':k=hk;break;case'sDrop':k=splDropK()/DROP_GAIN;break;default:k=wFrac}
+    const lv=v*k,pct=Math.max(0,Math.min(100,lv/Number(o.el.max)*100));
+    o.el.style.setProperty('--live',pct.toFixed(1)+'%');
+    o.out.textContent=lv>=10?Math.round(lv):lv.toFixed(1)}}
+
+let holding=null,tickLast=0,trayTimer=null;
+const RAMP_FILL=3.0,RAMP_DRAIN=0.06;
+function keepOpen(){clearTimeout(trayTimer)}
+function schedClose(ms=93500){clearTimeout(trayTimer);trayTimer=setTimeout(closeTray,ms)}
+function tickHold(now){if(!holding)return;const dt=Math.min(0.1,(now-tickLast)/1000);tickLast=now;switch(holding){case'ink':brush.p=Math.min(BRUSH_P_CAP,brush.p+RAMP_FILL*dt*BRUSH_P_CAP);break;case'water':brush.w=Math.min(BRUSH_W_CAP,brush.w+RAMP_FILL*dt*BRUSH_W_CAP);break;case'napInk':brush.p=Math.max(0,brush.p-RAMP_DRAIN*dt*BRUSH_P_CAP);break;case'napWater':brush.w=Math.max(0,brush.w-RAMP_DRAIN*dt*BRUSH_W_CAP);break;case'napBoth':brush.p=Math.max(0,brush.p-RAMP_DRAIN*dt*BRUSH_P_CAP);brush.w=Math.max(0,brush.w-RAMP_DRAIN*dt*BRUSH_W_CAP);break}}
+function startHold(which){tickLast=performance.now();holding=which;keepOpen()}
+function stopHold(){holding=null;schedClose()}
+function bindHold(el,which){
+  const press=e=>{e.preventDefault();e.stopPropagation();try{el.setPointerCapture(e.pointerId)}catch(_){}startHold(which);el.classList.add('pressed')};
+  const release=e=>{if(e&&e.preventDefault)e.preventDefault();stopHold();el.classList.remove('pressed')};
+  el.addEventListener('pointerdown',press);el.addEventListener('pointerup',release);
+  el.addEventListener('pointercancel',release);el.addEventListener('lostpointercapture',release);
+  el._release=release}
+window.addEventListener('pointerup',()=>{if(holding)stopHold()},{passive:true});
+window.addEventListener('pointercancel',()=>{if(holding)stopHold()},{passive:true});
+bindHold(document.getElementById('dipInk'),'ink');
+bindHold(document.getElementById('dipWater'),'water');
+
+// ═══ NAPKIN ═══
+const napCvs=document.getElementById('napCanvas'),napCtx=napCvs.getContext('2d');const NAP_W=360,NAP_H=120;
+function initNapkin(){napCvs.width=NAP_W;napCvs.height=NAP_H;napCtx.fillStyle='#ece5d2';napCtx.fillRect(0,0,NAP_W,NAP_H);for(let i=0;i<NAP_W*NAP_H*0.015;i++){const x=hash11(i*1.7)*NAP_W,y=hash11(i*3.1)*NAP_H,g=218+hash11(i*5.3)*22;napCtx.fillStyle=`rgb(${g},${g-4},${g-10})`;napCtx.fillRect(x,y,hash11(i*7.1)*3+1,1)}
+  napCtx.strokeStyle='rgba(160,150,135,0.35)';napCtx.lineWidth=1;
+  const x1=Math.floor(NAP_W/3),x2=Math.floor(NAP_W*2/3);
+  napCtx.beginPath();napCtx.moveTo(x1+0.5,0);napCtx.lineTo(x1+0.5,NAP_H);napCtx.stroke();
+  napCtx.beginPath();napCtx.moveTo(x2+0.5,0);napCtx.lineTo(x2+0.5,NAP_H);napCtx.stroke()}
+function napDabAt(cx,cy,drainZone){if(brush.w<0.5&&brush.p<0.5)return;const wFrac=brush.w/(brush.w+brush.p+1e-12),pigDensity=brush.p/BRUSH_P_CAP;const alpha=Math.min(1,pigDensity*(0.3+0.7*(1-wFrac*0.6)));const r=Math.round(inkR*255),g=Math.round(inkG*255),b=Math.round(inkB*255);const col=`rgb(${r},${g},${b})`;const dabR=Math.max(2,brushRadius*0.45*(0.6+pigDensity*0.4));napCtx.fillStyle=col;napCtx.strokeStyle=col;
+  if(brushStyle==='point'){const pr=dabR*0.5;napCtx.globalAlpha=Math.max(0.06,alpha*0.8);napCtx.beginPath();napCtx.arc(cx,cy,pr,0,Math.PI*2);napCtx.fill()}
+  else if(brushStyle==='side'){napCtx.globalAlpha=Math.max(0.04,alpha*0.55);napCtx.save();napCtx.translate(cx,cy);napCtx.beginPath();napCtx.ellipse(0,0,dabR*1.4,dabR*0.5,0,0,Math.PI*2);napCtx.fill();napCtx.restore()}
+  else if(brushStyle==='rake'){const bristles=Math.max(3,Math.floor(dabR*0.8));const spacing=dabR*2/bristles;napCtx.globalAlpha=Math.max(0.05,alpha*0.65);for(let i=0;i<bristles;i++){const bx=cx+(i-bristles/2)*spacing;napCtx.beginPath();napCtx.arc(bx,cy,spacing*0.35,0,Math.PI*2);napCtx.fill()}}
+  else if(brushStyle==='smudge'){napCtx.globalAlpha=Math.max(0.04,alpha*0.3);napCtx.beginPath();napCtx.arc(cx,cy,dabR*1.5,0,Math.PI*2);napCtx.fill();napCtx.globalAlpha=Math.max(0.02,alpha*0.1);napCtx.beginPath();napCtx.arc(cx,cy,dabR*1.8,0,Math.PI*2);napCtx.fill()}
+  else{napCtx.globalAlpha=Math.max(0.04,alpha*0.6);napCtx.beginPath();napCtx.arc(cx,cy,dabR,0,Math.PI*2);napCtx.fill()}
+  if(wFrac>0.25){napCtx.globalAlpha=Math.max(0.02,alpha*0.10*wFrac);napCtx.beginPath();napCtx.arc(cx,cy,dabR*(1+wFrac*0.8),0,Math.PI*2);napCtx.fill()}
+  if(pigDensity>0.06&&brushStyle!=='smudge'){napCtx.globalAlpha=Math.max(0.01,alpha*0.15);napCtx.lineWidth=0.5;napCtx.beginPath();napCtx.arc(cx,cy,dabR*1.2,0,Math.PI*2);napCtx.stroke()}
+  napCtx.globalAlpha=1;
+  if(drainZone==='napInk'||drainZone==='napBoth')brush.p=Math.max(0,brush.p-brush.p*0.008);
+  if(drainZone==='napWater'||drainZone==='napBoth')brush.w=Math.max(0,brush.w-brush.w*0.008)}
+function napClientToCanvas(cx,cy){const rect=napCvs.getBoundingClientRect();return[(cx-rect.left)/rect.width*NAP_W,(cy-rect.top)/rect.height*NAP_H]}
+setTimeout(initNapkin,300);let _napRz=null;window.addEventListener('resize',()=>{clearTimeout(_napRz);_napRz=setTimeout(initNapkin,250)},{passive:true});
+
+(function setupNapkin(){const nap=document.getElementById('napkin');let napHoldTimer=null,napHolding=false,napActive=false,napMoved=false,lastNapX=0,lastNapY=0,activeZone='napBoth';
+  function getZone(e){const rect=nap.getBoundingClientRect();const xFrac=(e.clientX-rect.left)/rect.width;return xFrac<0.33?'napInk':xFrac>0.66?'napWater':'napBoth'}
+  nap.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();nap.setPointerCapture(e.pointerId);napHolding=false;napActive=true;napMoved=false;activeZone=getZone(e);const[cx,cy]=napClientToCanvas(e.clientX,e.clientY);lastNapX=cx;lastNapY=cy;napHoldTimer=setTimeout(()=>{if(!napMoved){napHolding=true;startHold(activeZone)}},300);napDabAt(cx,cy,activeZone);updateFills();keepOpen()});
+  nap.addEventListener('pointermove',e=>{if(!napActive&&!napHolding)return;if(napHolding)return;e.preventDefault();clearTimeout(napHoldTimer);napMoved=true;const[cx,cy]=napClientToCanvas(e.clientX,e.clientY);const dx=cx-lastNapX,dy=cy-lastNapY,dist=Math.sqrt(dx*dx+dy*dy);if(dist<2)return;const steps=Math.max(1,Math.ceil(dist/3));for(let i=1;i<=steps;i++){const t=i/steps;napDabAt(lastNapX+dx*t,lastNapY+dy*t,activeZone)}updateFills();lastNapX=cx;lastNapY=cy});
+  nap.addEventListener('pointerup',e=>{e.preventDefault();clearTimeout(napHoldTimer);if(napHolding)stopHold();napHolding=false;napActive=false;napMoved=false});
+  nap.addEventListener('pointercancel',e=>{clearTimeout(napHoldTimer);if(napHolding)stopHold();napHolding=false;napActive=false;napMoved=false})})();
+
+// ═══ PALETTE SWITCHER ═══
+let activePal='vivid';
+const palToggle=document.getElementById('palToggle');
+document.querySelectorAll('#swatchRow .swatch').forEach(sw=>{
+  sw.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();
+    sw.closest('.palPage').querySelectorAll('.swatch').forEach(s=>s.classList.remove('active'));
+    sw.classList.add('active');inkR=parseFloat(sw.dataset.r);inkG=parseFloat(sw.dataset.g);inkB=parseFloat(sw.dataset.b);schedClose()})});
+palToggle.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();
+  const next=activePal==='vivid'?'earth':'vivid';
+  document.querySelectorAll('.palPage').forEach(p=>p.classList.toggle('active',p.dataset.pal===next));
+  activePal=next;palToggle.classList.toggle('flipped',next==='earth');
+  const newPage=document.querySelector('.palPage.active');
+  if(!newPage.querySelector('.swatch.active')){const first=newPage.querySelector('.swatch');first.classList.add('active');inkR=parseFloat(first.dataset.r);inkG=parseFloat(first.dataset.g);inkB=parseFloat(first.dataset.b)}
+  else{const act=newPage.querySelector('.swatch.active');inkR=parseFloat(act.dataset.r);inkG=parseFloat(act.dataset.g);inkB=parseFloat(act.dataset.b)}keepOpen()});
+
+document.querySelectorAll('#brushRow .size').forEach(sz=>{sz.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();const r=Number(sz.dataset.r);brushRange=BRUSH_RANGES[r]||[r*0.5,r*2];brushRadius=brushRange[0]+0.5*(brushRange[1]-brushRange[0]);document.querySelectorAll('#brushRow .size').forEach(s=>s.classList.remove('active'));sz.classList.add('active');refreshLiveChar();schedClose()})});
+document.querySelectorAll('#brushRow .bstyle').forEach(bs=>{bs.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();document.querySelectorAll('#brushRow .bstyle').forEach(s=>s.classList.remove('active'));bs.classList.add('active');brushStyle=bs.dataset.style;schedClose()})});
+
+function resetAll(){water.fill(0);wetF.fill(0);mPig.fill(0);fPig.fill(0);mR.fill(0);mG.fill(0);mB.fill(0);fR.fill(0);fG.fill(0);fB.fill(0);
+  hasWet=false;dirtyX0=NX;dirtyY0=NY;dirtyX1=0;dirtyY1=0;
+  splatParticles.length=0;partBox=null;lastOrient=null;
+  smudgeBuf.r=0;smudgeBuf.g=0;smudgeBuf.b=0;smudgeBuf.amt=0;
+  requestFullRepaint();updateFills();render();if(typeof initNapkin==='function')initNapkin()}
+document.getElementById('resetBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();resetAll()});
+
+// ═══ TRAY TAB ═══
+const trayTab=document.getElementById('trayTab');let trayOpen=false;
+function openTray(){tray.classList.add('visible');trayTab.textContent='▼ TRAY';trayOpen=true;schedClose(6000990)}
+function closeTray(){clearTimeout(trayTimer);tray.classList.remove('visible');trayTab.textContent='▲ TRAY';trayOpen=false;holding=null;initNapkin()}
+trayTab.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(trayOpen)closeTray();else openTray()});
+document.getElementById('grab').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();closeTray()});
+
+// ═══ DRAIN LOCK ═══
+let disperseOn=true;const disperseBtn=document.getElementById('disperseToggle');
+disperseBtn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();disperseOn=!disperseOn;disperseBtn.classList.toggle('off',!disperseOn);disperseBtn.title=disperseOn?'Brush drains normally':'Brush locked — infinite ink';keepOpen()});
+
+// ═══ SPLATTER (v7: SPLAT v3.2 physics, depositing into the ink sim) ═══
+// Ported from splat_v3: Rayleigh–Taylor droplet size, Weber-number breakup
+// regimes, bimodal fat/mist distribution, size-dependent carry, Comiskey/Yarin
+// impact spread, teardrop stain outline, crown satellites, forward spines and
+// ligament bead rows. What's different from SPLAT: nothing is painted onto the
+// canvas. Every stain lands in the mobile pigment + water layers, so splatter
+// bleeds, blooms, rims and dries exactly like a brush stroke does.
+// Gyro-only parts of SPLAT (loft/slam, spin, tilt drips) are not ported — SUMI
+// is touch-driven and the paper is flat.
+//
+// Brush state drives the ink's material: a wet brush throws thin, low-viscosity
+// ink (fine mist, wide cone); a dry, pigment-heavy brush throws thick ink (fewer,
+// fatter drops). Pigment load sets how dark the drops are (it replaces SPLAT's
+// Flow slider), and the brush's wetness is written into wetF so a wet flick
+// blooms under the Wet/Bloom gains.
+let splatParticles=[];
+// Tuned SPLAT constants (kept verbatim).
+const SPL_CARRY0=0.22,SPL_CARRY1=0.78,SPL_CARRY_S=5,SPL_IMP_DIV=24;
+const SPL_K_V=760,SPL_MINV=16,SPL_MAXV=6000,SPL_FALL_K=20,SPL_CROWN_THRESH=4;
+// Touch mapping (new, calibrated so realistic flicks span all four breakup
+// regimes). SPL_VEL_K: px/ms → SPLAT velocity units. SPL_ACC_K/JERK_K: how
+// finger speed and speed-up feed droplet size.
+const SPL_VEL_K=0.055,SPL_ACC_K=60,SPL_JERK_K=100;
+// Deposit scale: pigment per stain cell at full ink load and alpha 1, and the
+// water range from a dry to a fully wet brush.
+const SPL_PIG=2.0,SPL_WAT_DRY=0.12,SPL_WAT_WET=0.85;
+const SPL_MAX_DROPS=360,SPL_MAX_THROW=0.35,SPL_FLICK_LOSS=0.06,SPL_MAX_FRAMES=45;
+let SPRAY=1.0,SPLAT_HEIGHT=15,DROP_GAIN=1.0,lastSplat=null;
+// v7.1: drop size follows the brush. brushRadius at release (the live,
+// contact-driven radius, not just the size button) scales every drop and its
+// stain. It is applied AFTER the breakup physics, so a big brush throws big
+// drops without also atomising harder — the Weber regime still comes from
+// flick speed and ink thickness. Darkness still comes from ink load and
+// wetness from water load, so any size can be dark or wet.
+// SPL_R_REF: radius that gives SPLAT's native drop sizes. SPL_R_EXP just
+// under 1 so drops track the brush nearly proportionally. Drop slider
+// multiplies on top.
+const SPL_R_REF=20,SPL_R_EXP=0.9,SPL_DROPK_MIN=0.12,SPL_DROPK_MAX=3.8;
+function splDropK(){return DROP_GAIN*sclamp(Math.pow(Math.max(0.5,brushRadius)/SPL_R_REF,SPL_R_EXP),SPL_DROPK_MIN,SPL_DROPK_MAX)}
+function sclamp(v,a,b){return v<a?a:v>b?b:v}
+function shs(seed,i){const x=Math.sin((seed*0.113+i*1.7321+0.577)*12.9898+78.233)*43758.5453;return x-Math.floor(x)}
+function splatInk(dry){return{rho:mix(0.90,1.25,dry),sigma:mix(0.028,0.070,dry),viscK:mix(0.70,2.0,Math.pow(dry,1.2))}}
+function splRT(ink,A){A=Math.max(A,0.5);return sclamp((5.5/Math.sqrt(A))*ink.viscK*(ink.sigma/0.028),0.35,7)}
+function splRegime(We){
+  if(We<4)return{count:20,spreadDeg:16,fatFrac:0.16};
+  if(We<15)return{count:44,spreadDeg:28,fatFrac:0.13};
+  if(We<60)return{count:90,spreadDeg:44,fatFrac:0.10};
+  return{count:150,spreadDeg:66,fatFrac:0.07}}
+function splCarry(size){return SPL_CARRY0+SPL_CARRY1*(1-Math.exp(-size/SPL_CARRY_S))}
+function splSpread(ink,size,imp){
+  const We=(ink.rho*imp*imp*size)/ink.sigma,Re=ink.rho*imp*size/(ink.viscK*0.02);
+  const Oh=Re>0?Math.sqrt(Math.max(We,0.2))/Re:1;
+  return sclamp(0.61*Math.pow(Math.max(We,0.2),0.30)/Math.pow(Math.max(Oh,0.01),0.166),0.9,2.4)}
+
+// Drops and satellites that land past the edge are simply off the paper:
+// depositStain clips per cell, so a stain half over the edge is half there.
+// One stain in the sim. Same outline as SPLAT's paintDrop: ellipse along the
+// travel direction, narrower at the leading end (taper), slight wobble. The
+// pigment/water budget is fixed by the caller and normalised over the footprint,
+// so ink is conserved no matter how big the stain turns out.
+let stIdx=new Int32Array(4096),stWt=new Float64Array(4096);
+function depositStain(x,y,R,aspect,dirX,dirY,seed,pig,wat,cr,cg,cb,wf){
+  if(pig<=0&&wat<=0)return;
+  const major=R*aspect,minor=R,ph=seed*0.0031;
+  const ext=Math.ceil(major*1.2)+2;
+  const x0=Math.round(x),y0=Math.round(y);
+  let n=0,tot=0;
+  // Border ring excluded: simulateStep never visits it, so ink there would
+  // stay mobile forever.
+  for(let dy=-ext;dy<=ext;dy++){const py=y0+dy;if(py<1||py>=NY-1)continue;
+    for(let dx=-ext;dx<=ext;dx++){const px=x0+dx;if(px<1||px>=NX-1)continue;
+      const fx=px-x,fy=py-y;let wt;
+      if(R<1.2){const d2=fx*fx+fy*fy;wt=Math.exp(-d2/Math.max(0.35,R*R*0.9))}
+      else{
+        const ex=fx*dirX+fy*dirY,ey=-fx*dirY+fy*dirX;
+        const a=Math.atan2(ey/minor,ex/major),ca=Math.cos(a);
+        const taper=1-0.28*Math.max(0,ca);
+        const wob=1+0.04*Math.sin(3*a+ph)+0.025*Math.sin(5*a+ph*1.7);
+        const rho=Math.sqrt((ex/major)*(ex/major)+(ey/(minor*taper))*(ey/(minor*taper)))/wob;
+        if(rho>=1.15)continue;
+        wt=rho<0.85?1:1-(rho-0.85)/0.30;
+        wt*=0.85+0.15*absorb[py*NX+px];
+      }
+      if(wt<0.01)continue;
+      if(n>=stIdx.length){let c=stIdx.length*2;const ni=new Int32Array(c),nw=new Float64Array(c);ni.set(stIdx);nw.set(stWt);stIdx=ni;stWt=nw}
+      stIdx[n]=py*NX+px;stWt[n]=wt;n++;tot+=wt}}
+  if(tot<=0)return;
+  for(let k=0;k<n;k++){const i=stIdx[k],f=stWt[k]/tot;
+    let wAdd=wat*f;const pAdd=pig*f;
+    const room=Math.max(0,WATER_CAP-water[i]);if(wAdd>room)wAdd=room;
+    if(wAdd>0){const kk=Math.min(1,wAdd/(water[i]+wAdd+1e-9));wetF[i]=wetF[i]*(1-kk)+wf*kk}
+    water[i]+=wAdd;
+    const ex=mPig[i],t=ex+pAdd;
+    if(t>0){const ew=ex/t,nw=pAdd/t;mR[i]=mR[i]*ew+cr*nw;mG[i]=mG[i]*ew+cg*nw;mB[i]=mB[i]*ew+cb*nw}
+    mPig[i]=t}
+  expandDirty(x0-ext,y0-ext,x0+ext,y0+ext);hasWet=true}
+
+class SplatParticle{
+  // A drop in flight. Its landing point, stain and secondary marks are all
+  // decided at launch (SPLAT is deterministic), so flight is just the reveal:
+  // exponential drag whose total travel equals the computed reach. Bigger drops
+  // carry further and decelerate more slowly, like SPLAT's carry fraction.
+  constructor(o){Object.assign(this,o);
+    this.f=0.80+0.10*splCarry(this.size0);
+    const dx=this.lx-this.x0,dy=this.ly-this.y0;
+    this.vx=dx*(1-this.f);this.vy=dy*(1-this.f);
+    this.x=this.x0;this.y=this.y0;this.frame=0;this.settled=false;
+    this.drawR=Math.max(0.6,Math.min(6,this.size*0.45));this.alphaDraw=0.9}
+  update(){
+    if(this.settled)return;
+    this.x+=this.vx;this.y+=this.vy;this.vx*=this.f;this.vy*=this.f;this.frame++;
+    if(this.x<-40||this.y<-40||this.x>NX+40||this.y>NY+40){this.settled=true;return}
+    if(this.frame>=SPL_MAX_FRAMES||Math.hypot(this.lx-this.x,this.ly-this.y)<0.6){
+      this.settled=true;this.land()}}
+  land(){
+    const c=this,tot=c.markW;if(tot<=0)return;
+    for(const m of c.marks){const k=m.w/tot;
+      depositStain(m.x,m.y,m.R,m.aspect,m.dx,m.dy,m.seed,c.pig*k,c.wat*k,c.ar,c.ag,c.ab,c.wf)}}
+}
+
+// px,py: grid coords. angle: radians. speed: legacy flick units (px/ms × 30),
+// kept so JSON `flick` values mean what they always meant. accPx: finger
+// speed-up in px/ms² (0 from JSON).
+function triggerKineticSplatter(px,py,angle,speed,accPx){
+  const load=brushLoad();
+  if(load<0.02||(brush.p<1&&brush.w<1))return;
+  const wFrac=brush.w/(brush.w+brush.p+1e-12),dry=1-wFrac;
+  const ink=splatInk(dry);
+  const vPx=Math.max(0,speed/30);
+  const velE=vPx*SPL_VEL_K*SPRAY;
+  const accelE=Math.max(0.5,velE*SPL_ACC_K+(accPx||0)*SPL_JERK_K*SPRAY);
+  const seed=Math.floor(px)*3.1+Math.floor(py)*7.7+Math.floor(angle*45)*13.9+strokeSeed*0.37;
+
+  const l0=splRT(ink,accelE);
+  const dropK=splDropK();
+  const Vw=sclamp(velE*3.2,0.05,120);
+  const We=(ink.rho*Vw*Vw*l0)/ink.sigma;
+  const reg=splRegime(We);
+  const spreadRad=reg.spreadDeg*Math.PI/180;
+  const Vp=sclamp(velE*SPL_K_V,SPL_MINV,SPL_MAXV);
+  const atom=sclamp(We/60,1,200),countScale=1+Math.log2(atom)*0.42;
+  const fatFrac=reg.fatFrac/countScale;
+  const fallImp=SPL_FALL_K*Math.sqrt(SPLAT_HEIGHT/100);
+  // An emptying brush throws fewer drops, not just paler ones.
+  const loadCount=sclamp(0.2+0.8*Math.sqrt(load),0.2,1);
+  // Big drops are fewer, fine spray is denser, so ink per flick grows roughly
+  // with brush size instead of with stain AREA (which would starve big drops).
+  const sizeCount=sclamp(1/dropK,0.3,2.5);
+  const nDrops=Math.round(sclamp(reg.count*countScale*(0.75+shs(seed,0)*0.4)*loadCount*sizeCount,3,SPL_MAX_DROPS));
+  const maxR=Math.min(NX,NY)*sclamp(0.045*dropK,0.010,0.14),maxSpread=Math.min(NX,NY)*0.72;
+  const dirX=Math.cos(angle),dirY=Math.sin(angle);
+  const pigConc=Math.min(1,brush.p/BRUSH_P_CAP),watConc=Math.min(1,brush.w/BRUSH_W_CAP);
+  const cellPig=SPL_PIG*(0.15+0.85*pigConc);
+  const cellWat=mix(SPL_WAT_DRY,SPL_WAT_WET,wFrac)*(0.5+0.5*watConc);
+  const cr=inkR,cg=inkG,cb=inkB,SA=inkAbs(),car=SA[0],cag=SA[1],cab=SA[2];
+
+  const drops=[],big=[];let sumP=0,sumW=0;
+  for(let i=0;i<nDrops;i++){
+    const isFat=shs(seed,i*3+5)<fatFrac;
+    const size0=isFat?l0*(2.2+3.0*Math.pow(shs(seed,i*2+13),1.4)):l0*(0.22+0.9*Math.pow(shs(seed,i*2+11),2.2));
+    const size=size0*dropK;
+    const su=shs(seed,i*2+12),szK=sclamp(size0/(l0*2.5),0,1);
+    const spd=Vp*(0.45+1.1*su)*(0.7+0.5*szK);
+    const au=shs(seed,i*3+21)+shs(seed,i*3+22)-1,ang=au*spreadRad;
+    const c=Math.cos(ang),s=Math.sin(ang);
+    const vx=dirX*c-dirY*s,vy=dirX*s+dirY*c;
+    // Carry from the physical size: a big brush makes big drops, not longer throws.
+    const rawReach=spd*splCarry(size0);
+    const reach=maxSpread*(1-Math.exp(-rawReach/maxSpread));
+    const lx=(px+vx*reach),ly=(py+vy*reach);
+    const latImp=rawReach/SPL_IMP_DIV;
+    const totalImp=Math.hypot(latImp,fallImp);
+    const directional=latImp/(totalImp+0.001);
+    const R=sclamp(size*splSpread(ink,size,totalImp),0.5,maxR);
+    const rawAspect=1+sclamp(latImp*0.11,0,2.2)*directional;
+    const heightFactor=1-sclamp(fallImp/(fallImp+latImp+0.001),0,0.75);
+    const aspect=1+(rawAspect-1)*heightFactor;
+    const alpha=sclamp(0.45+totalImp*0.03,0.05,0.97);
+    const ds=seed+i*31;
+    // Marks carry relative weight = alpha × area, so the pigment budget splits
+    // between main stain and satellites the way SPLAT's paint coverage does.
+    const marks=[];const addMark=(x,y,r,asp,dx,dy,a,sd)=>{const w=a*Math.PI*r*r*asp;marks.push({x,y,R:r,aspect:asp,dx,dy,seed:sd,w});return w};
+    let mw=addMark(lx,ly,R,aspect,vx,vy,alpha,ds);
+    if(fallImp>SPL_CROWN_THRESH&&R>1.4){
+      const crown=Math.round(sclamp((fallImp-SPL_CROWN_THRESH)*0.8+totalImp*0.15,0,22));
+      for(let k=0;k<crown;k++){
+        const ca=(k/crown)*Math.PI*2+(shs(ds,k*3)-0.5)*0.9;
+        const dist=R*(1.0+shs(ds,k*3+1)*2.0),rr=Math.max(0.5,R*(0.10+shs(ds,k*3+2)*0.16));
+        const sx=(lx+Math.cos(ca)*dist),sy=(ly+Math.sin(ca)*dist);
+        const aa=alpha*(0.4+shs(ds,k*3+2)*0.4);
+        mw+=addMark(sx,sy,rr,1,1,0,aa,ds+k);
+        if(shs(ds,k*3+2)>0.72){mw+=addMark((lx+Math.cos(ca)*dist*1.35),(ly+Math.sin(ca)*dist*1.35),Math.max(0.4,rr*0.5),1,1,0,alpha*0.35,ds+k+97)}}
+    }else if(directional>0.55&&latImp>6&&R>2.5){
+      const sp=1+Math.floor(shs(ds,3)*2.4);
+      for(let k=1;k<=sp;k++){const jit=(shs(ds,k*5)-0.5)*0.5;
+        const sdX=vx*Math.cos(jit)-vy*Math.sin(jit),sdY=vx*Math.sin(jit)+vy*Math.cos(jit);
+        const dist=R*(1.1+k*0.7),rr=Math.max(0.5,R*0.16/k);
+        mw+=addMark((lx+sdX*dist),(ly+sdY*dist),rr,1,1,0,alpha*Math.max(0.3,0.85-k*0.18),ds+k*7)}}
+    const d={x0:px,y0:py,lx,ly,size,size0,R,marks,markW:mw,alpha,r:cr,g:cg,b:cb,ar:car,ag:cag,ab:cab,wf:wFrac};
+    // Budget is per unit coverage: a stain of area A at alpha a gets cellPig·a
+    // per cell on average.
+    d.pig=cellPig*mw;d.wat=cellWat*mw;sumP+=d.pig;sumW+=d.wat;
+    drops.push(d);if(R>maxR*0.5)big.push(d);
+  }
+  // Ligament bead rows from the release point to the biggest stains.
+  if(We>9&&big.length){
+    const nLig=sclamp(Math.round(We*0.02),1,3);
+    for(let j=0;j<nLig;j++){
+      const t=big[Math.floor(shs(seed,900+j)*big.length)%big.length],ls=seed+400+j*17;
+      const ddx=t.lx-px,ddy=t.ly-py,len=Math.hypot(ddx,ddy)||1,ux=ddx/len,uy=ddy/len,qx=-uy,qy=ux,lw=Math.max(l0*dropK,1.2);
+      const nB=sclamp(Math.round(len/(lw*2.4)),3,9);
+      for(let i=0;i<nB;i++){const tt=i/(nB-1);
+        const wander=Math.sin(tt*6.28+ls)*lw*0.5*(shs(ls,i)-0.5)*2;
+        const rr=Math.max(0.6,lw*(0.8-tt*0.55)*(0.6+shs(ls,i+40)*0.6));
+        const w=0.7*(0.9-tt*0.4)*Math.PI*rr*rr;
+        t.marks.push({x:(px+ddx*tt+qx*wander),y:(py+ddy*tt+qy*wander),R:rr,aspect:1,dx:1,dy:0,seed:ls+i,w});
+        t.markW+=w;t.pig+=cellPig*w;t.wat+=cellWat*w;sumP+=cellPig*w;sumW+=cellWat*w}}
+  }
+  // Never throw more than a fraction of what's on the brush. With the drain
+  // lock on, the brush is treated as bottomless and nothing is scaled.
+  let kP=1,kW=1;
+  if(disperseOn){
+    if(sumP>brush.p*SPL_MAX_THROW)kP=brush.p*SPL_MAX_THROW/(sumP+1e-9);
+    if(sumW>brush.w*SPL_MAX_THROW)kW=brush.w*SPL_MAX_THROW/(sumW+1e-9)}
+  for(const d of drops){d.pig*=kP;d.wat*=kW;splatParticles.push(new SplatParticle(d))}
+  lastSplat={dropK,l0,We,nDrops,maxR,load,pigConc,wFrac,kP,kW,sumP,brushP:brush.p,radius:brushRadius};
+  if(disperseOn){
+    // Ink that landed, plus the mist that leaves the paper on a violent flick.
+    brush.p=Math.max(0,(brush.p-sumP*kP)*(1-SPL_FLICK_LOSS));
+    brush.w=Math.max(0,(brush.w-sumW*kW)*(1-SPL_FLICK_LOSS))}
+  updateFills();
+}
+
+let strokePts=[];
+function maybeFlick(){if(strokePts.length<3)return;const n=strokePts.length;const last=strokePts[n-1];const prev=strokePts[Math.max(0,n-8)];const dx=last.x-prev.x,dy=last.y-prev.y;const dt=(last.t-prev.t)||1;const spd=Math.hypot(dx,dy)/dt*15;const ang=Math.atan2(dy,dx);
+  if(spd>14){
+    // v7: finger speed-up over the window (px/ms²) — a snapping flick breaks
+    // the ink into finer drops than a steady fast drag.
+    const mid=strokePts[Math.max(0,n-4)];
+    const t1=(mid.t-prev.t)||1,t2=(last.t-mid.t)||1;
+    const v1=Math.hypot(mid.x-prev.x,mid.y-prev.y)/t1,v2=Math.hypot(last.x-mid.x,last.y-mid.y)/t2;
+    const acc=Math.max(0,v2-v1)/Math.max(1,dt*0.5);
+    triggerKineticSplatter(last.x,last.y,ang,spd*2,acc)}}
+
+// ═══ DRAWING ═══
+let drawing=false,lastGX=0,lastGY=0,lastTime=0,strokeSeed=0;
+function getPressure(e){if(e.pressure>0&&e.pressure!==1)return e.pressure;if(e.width&&e.width>1)return Math.min(1,Math.max(0.08,(e.width-8)/42));return 0.5}
+const BRUSH_RANGES={3:[1,25],8:[25,50],20:[50,75]};
+let brushRange=BRUSH_RANGES[3];
+brushRadius=brushRange[0]+0.5*(brushRange[1]-brushRange[0]);
+let lastContact=0;
+function getLiveRadius(e){const contact=Math.max(e.width||0,e.height||0);lastContact=contact;if(contact>20){const t=Math.min(1,Math.max(0,(contact-30)/130));return brushRange[0]+t*(brushRange[1]-brushRange[0])}return brushRange[0]+0.3*(brushRange[1]-brushRange[0])}
+
+canvas.addEventListener('pointerdown',e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);const[gx,gy]=clientToGrid(e.clientX,e.clientY);drawing=true;lastGX=gx;lastGY=gy;lastTime=performance.now();strokeSeed=performance.now()%1000;beginStroke();strokePts=[{x:gx,y:gy,t:e.timeStamp||performance.now()}];brushRadius=getLiveRadius(e);if(brushStyle==='smudge'){smudgeBuf.r=0;smudgeBuf.g=0;smudgeBuf.b=0;smudgeBuf.amt=0;smudgeDab(gx,gy,getPressure(e))}else{addDeposit(gx,gy,getPressure(e),0,0)}});
+canvas.addEventListener('pointermove',e=>{if(!drawing)return;const[gx,gy]=clientToGrid(e.clientX,e.clientY);const now=performance.now();brushRadius=getLiveRadius(e);drawSegment(lastGX,lastGY,gx,gy,getPressure(e));strokePts.push({x:gx,y:gy,t:e.timeStamp||now});if(strokePts.length>12)strokePts.shift();lastGX=gx;lastGY=gy;lastTime=now});
+canvas.addEventListener('pointerup',e=>{if(drawing&&brushStyle!=='smudge')maybeFlick();drawing=false;lastOrient=null;strokePts=[];try{canvas.releasePointerCapture(e.pointerId)}catch(_){}});
+canvas.addEventListener('pointercancel',()=>{drawing=false;lastOrient=null});
+
+// ═══ JSON IMPORT ═══
+
+function importJsonLayer(jsonStr){let data;try{data=JSON.parse(jsonStr)}catch(e){alert('JSON parse error: '+e.message);return}
+  function hexToRgb(hex){const m=/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);if(!m)return null;return[parseInt(m[1],16)/255,parseInt(m[2],16)/255,parseInt(m[3],16)/255]}
+
+  const _palettes={};
+  document.querySelectorAll('.palPage').forEach(pg=>{
+    const n=pg.dataset.pal;_palettes[n]=[];
+    pg.querySelectorAll('.swatch').forEach(sw=>{
+      _palettes[n].push([parseFloat(sw.dataset.r),parseFloat(sw.dataset.g),parseFloat(sw.dataset.b)])
+    })
+  });
+  function resolveColor(c){
+    if(!c||c.charAt(0)==='#')return hexToRgb(c||'#292420');
+    const parts=c.split('.');if(parts.length!==2)return hexToRgb('#292420');
+    let p=parts[0].toLowerCase();if(p==='v')p='vivid';if(p==='e')p='earth';
+    const idx=parseInt(parts[1],10);const pal=_palettes[p];
+    if(!pal||idx<0||idx>=pal.length)return hexToRgb('#292420');
+    return pal[idx]
+  }
+
+  function catmullPt(p0,p1,p2,p3,t){
+    const t2=t*t,t3=t2*t;
+    return[
+      0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+      0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)
+    ]
+  }
+  function interpPath(raw,mode){
+    if(!mode||mode==='linear'||raw.length<3)return raw;
+    const out=[raw[0]];
+    for(let i=0;i<raw.length-1;i++){
+      const p0=raw[Math.max(0,i-1)],p1=raw[i],p2=raw[Math.min(raw.length-1,i+1)],p3=raw[Math.min(raw.length-1,i+2)];
+      const steps=8;
+      for(let s=1;s<=steps;s++)out.push(catmullPt(p0,p1,p2,p3,s/steps))
+    }
+    return out
+  }
+
+  if(Array.isArray(data)){for(const d of data){const gx=Math.round(d.x),gy=Math.round(d.y);if(gx<0||gy<0||gx>=NX||gy>=NY)continue;const idx=gy*NX+gx;const sat=Math.min(1,Math.max(0,d.sat||0));const pig=Math.min(sat*PIGMENT_CAP,Math.max(0,d.pig||0));const toPixel=v=>(v==null?0:v<=1.0?v*255:v);const ir=toPixel(d.r),ig=toPixel(d.g),ib=toPixel(d.b);const A=absOf(ir/255,ig/255,ib/255);const existing=fPig[idx];const total=existing+pig;if(total>1e-6){const ew=existing/total,nw=pig/total;fR[idx]=fR[idx]*ew+A[0]*nw;fG[idx]=fG[idx]*ew+A[1]*nw;fB[idx]=fB[idx]*ew+A[2]*nw;fPig[idx]=Math.min(PIGMENT_CAP,total)}else{fPig[idx]=Math.min(PIGMENT_CAP,pig);fR[idx]=A[0];fG[idx]=A[1];fB[idx]=A[2]}}requestFullRepaint();return}
+
+  const _brushW=brush.w,_brushP=brush.p,_inkR=inkR,_inkG=inkG,_inkB=inkB,_brushRadius=brushRadius,_brushStyle=brushStyle,_strokeSeed=strokeSeed;
+
+  if(data.paper&&data.paper.wetness>0){const wet=Math.min(0.6,data.paper.wetness);for(let cy=0;cy<NY;cy++)for(let cx=0;cx<NX;cx++){const idx=cy*NX+cx;water[idx]=Math.min(1,water[idx]+wet*(0.75+0.25*valueNoise(cx*1.3,cy*2.7)))}expandDirty(0,0,NX-1,NY-1);hasWet=true}
+
+  let strokeCount=0,dabCount=0;for(let si=0;si<(data.strokes||[]).length;si++){const stroke=data.strokes[si];if(!stroke.path||stroke.path.length<1)continue;
+
+    const rgb=resolveColor(stroke.color);
+    if(rgb){inkR=rgb[0];inkG=rgb[1];inkB=rgb[2]}
+
+    const gain=Math.max(0.1,Math.min(20,stroke.gain??1.0));
+    brush.w=Math.min(BRUSH_W_CAP*gain,Math.max(0,(stroke.water??0.8)*BRUSH_W_CAP*gain));
+    brush.p=Math.min(BRUSH_P_CAP*gain,Math.max(0,(stroke.pigment??0.5)*BRUSH_P_CAP*gain));
+
+    brushRadius=stroke.brush??brushRadius;
+    brushStyle=(stroke.style&&['round','point','side','rake','smudge'].includes(stroke.style))?stroke.style:brushStyle;
+    const press=Math.min(1,Math.max(0,stroke.pressure??0.5));
+    strokeSeed=(performance.now()%1000+si*137)%1000;
+    beginStroke();
+
+    const rawPts=stroke.path.map(([nx,ny])=>[nx,ny]);
+    const smoothPts=interpPath(rawPts,stroke.interpolation);
+    const pts=smoothPts.map(([nx,ny])=>[nx*(NX-1),ny*(NY-1)]);
+    if(pts.length===1){addDeposit(pts[0][0],pts[0][1],press,0,0);dabCount++}
+    else{addDeposit(pts[0][0],pts[0][1],press,0,0);dabCount++;
+      for(let p=0;p<pts.length-1;p++){drawSegment(pts[p][0],pts[p][1],pts[p+1][0],pts[p+1][1],press);
+        const dx=pts[p+1][0]-pts[p][0],dy=pts[p+1][1]-pts[p][1];dabCount+=Math.max(1,Math.ceil(Math.hypot(dx,dy)/1.5))}}
+
+    if(stroke.flick&&pts.length>=2){
+      const last=pts[pts.length-1],prev=pts[Math.max(0,pts.length-3)];
+      const dx=last[0]-prev[0],dy=last[1]-prev[1],ang=Math.atan2(dy,dx);
+      const spd=stroke.flick===true?40:Math.min(120,Math.max(10,stroke.flick));
+      triggerKineticSplatter(last[0],last[1],ang,spd)
+    }
+
+    strokeCount++;
+
+    if(stroke.pause&&stroke.pause>0){const ticks=Math.min(2000,Math.round(stroke.pause));for(let t=0;t<ticks;t++)simulateStep()}
+  }
+
+  brush.w=_brushW;brush.p=_brushP;inkR=_inkR;inkG=_inkG;inkB=_inkB;brushRadius=_brushRadius;brushStyle=_brushStyle;strokeSeed=_strokeSeed;lastOrient=null;updateFills()}
+
+(function buildJsonUI(){const btn=document.getElementById('jsonBtn');const fileIn=document.createElement('input');fileIn.type='file';fileIn.accept='.json,application/json';fileIn.style.display='none';fileIn.addEventListener('change',()=>{const f=fileIn.files[0];if(!f)return;const reader=new FileReader();reader.onload=e=>importJsonLayer(e.target.result);reader.readAsText(f);fileIn.value=''});let pressT=null,longFired=false;
+ btn.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();longFired=false;keepOpen();
+   clearTimeout(pressT);pressT=setTimeout(()=>{longFired=true;const txt=prompt('Paste JSON layer:');if(txt)importJsonLayer(txt)},600)});
+ btn.addEventListener('pointerup',e=>{e.preventDefault();e.stopPropagation();clearTimeout(pressT);if(!longFired)fileIn.click();keepOpen()});
+ btn.addEventListener('pointercancel',()=>clearTimeout(pressT));document.body.appendChild(fileIn)})();
+
+// ═══ ANIMATION ═══
+let partBox=null;
+function animate(){
+  const now=performance.now();
+  simulateStep();tickHold(now);
+  for(let i=splatParticles.length-1;i>=0;i--){splatParticles[i].update();if(splatParticles[i].settled)splatParticles.splice(i,1)}
+  if(partBox)markRender(partBox[0],partBox[1],partBox[2],partBox[3]);
+  let nb=null;
+  if(splatParticles.length>0){let a=NX,b=NY,c=-1,d=-1;
+    for(const p of splatParticles){const r=p.drawR*CELL+2,px=p.x*CELL,py=p.y*CELL;
+      if(px-r<a)a=px-r;if(py-r<b)b=py-r;if(px+r>c)c=px+r;if(py+r>d)d=py+r}
+    nb=[Math.max(0,a|0),Math.max(0,b|0),Math.min(NX-1,Math.ceil(c)),Math.min(NY-1,Math.ceil(d))];
+    markRender(nb[0],nb[1],nb[2],nb[3])}
+  partBox=nb;
+  render();
+  if(splatParticles.length>0){
+    for(const p of splatParticles){const px=p.x*CELL,py=p.y*CELL;ctx.globalAlpha=p.alphaDraw;ctx.fillStyle='rgb('+Math.round(p.r*255)+','+Math.round(p.g*255)+','+Math.round(p.b*255)+')';ctx.beginPath();ctx.arc(px,py,p.drawR*CELL,0,Math.PI*2);ctx.fill()}
+    ctx.globalAlpha=1}
+  updateFills();requestAnimationFrame(animate)}
+updateFills();render();requestAnimationFrame(animate);setTimeout(openTray,99400);
+if(location.search.includes('debug')){const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/eruda';s.onload=()=>eruda.init();document.body.appendChild(s)}
+window.resetAll=resetAll;window.openTray=openTray;window.closeTray=closeTray;
+// ═══ v5 CHARACTER CONTROLS ═══
+(function bindCharacter(){
+  const row=document.getElementById('charRow'),tog=document.getElementById('charToggle');
+  tog.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();
+    row.classList.toggle('open');tog.classList.toggle('on',row.classList.contains('open'));keepOpen()});
+  function link(id,vid,fn){
+    const el=document.getElementById(id),out=document.getElementById(vid);
+    const apply=()=>{const v=Number(el.value);out.textContent=v;fn(v)};
+    el.addEventListener('input',()=>{apply();refreshLiveChar()});
+    el.addEventListener('pointerdown',e=>{e.stopPropagation();keepOpen()});
+    el.addEventListener('pointerup',()=>schedClose(9986000));
+    apply();
+  }
+  // Chatter / Grain are ceilings reached at full dryness.
+  link('sChat','vChat',v=>{CHAT_MAX=v/100});
+  link('sGrain','vGrain',v=>{GRAIN_MAX=v/100});
+  // Heel is flat — no wetness coupling.
+  link('sHeel','vHeel',v=>{HEEL=v/100});
+  // Wet / Bloom are coupling gains: how far a fully wet brush travels toward v3.
+  link('sWet','vWet',v=>{WET_GAIN=v/100});
+  link('sBloom','vBloom',v=>{BLOOM_GAIN=v/100});
+  // v7 splash: Spray scales flick energy into the breakup physics, Height is
+  // SPLAT's drop height (fall impact → rounder stains and crown satellites).
+  link('sDrop','vDrop',v=>{DROP_GAIN=v/100});
+  link('sSpray','vSpray',v=>{SPRAY=v/100});
+  link('sHeight','vHeight',v=>{SPLAT_HEIGHT=v});
+  refreshLiveChar();
+})();
+
+window.SUMI={state:()=>({water:brush.w/BRUSH_W_CAP,ink:brush.p/BRUSH_P_CAP,tray:trayOpen,contact:lastContact,radius:brushRadius,style:brushStyle,chatMax:CHAT_MAX,grainMax:GRAIN_MAX,heel:HEEL,heelLive:HEEL*heelLoadK(),wetGain:WET_GAIN,bloomGain:BLOOM_GAIN,spray:SPRAY,height:SPLAT_HEIGHT,inFlight:splatParticles.length,lastSplat,
+  dryness:1-brush.w/(brush.w+brush.p+1e-12)})};
+})();
+</script>
+
+<script>
+/* ===== SUMI ENHANCEMENTS: visual/tactile layer only ===== */
+(()=>{
+  const base = document.getElementById('canvas');
+  const fx = document.getElementById('fxCanvas');
+  if(!base || !fx) return;
+  const ctx = fx.getContext('2d', {alpha:true});
+  let dpr=1, w=1, h=1;
+  let pointer={x:0,y:0,active:false,pressure:0.5,radius:8};
+  let pulse=0, raf=0, running=false;
+
+  const liveMode=document.getElementById('liveMode');
+  const liveLoad=document.getElementById('liveLoad');
+  const liveWater=document.getElementById('liveWater');
+  const liveTouch=document.getElementById('liveTouch');
+  const liveStatus=document.getElementById('liveStatus');
+
+  function resizeFX(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    w=innerWidth; h=innerHeight;
+    fx.width=Math.max(1,Math.round(w*dpr));
+    fx.height=Math.max(1,Math.round(h*dpr));
+    fx.style.width=w+'px'; fx.style.height=h+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  let rzT=null;
+  addEventListener('resize',()=>{clearTimeout(rzT);rzT=setTimeout(resizeFX,200)},{passive:true});
+  resizeFX();
+
+  function draw(){
+    ctx.clearRect(0,0,w,h);
+    if(pointer.active){
+      const r=Math.max(5,Math.min(120,pointer.radius));
+      const alpha=.18 + pointer.pressure*.16;
+      ctx.beginPath();
+      ctx.arc(pointer.x,pointer.y,r,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(236,234,210,${alpha})`;
+      ctx.lineWidth=1;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(pointer.x,pointer.y,2.1,0,Math.PI*2);
+      ctx.fillStyle=`rgba(145,185,161,${.28+pointer.pressure*.25})`;
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(pointer.x,pointer.y,r*.72,0,Math.PI*2);
+      ctx.strokeStyle='rgba(236,234,210,.045)';
+      ctx.stroke();
+    }
+    if(pulse>0){
+      pulse*=.86;
+      if(pulse>.002){
+        const r=8+(1-pulse)*34;
+        ctx.beginPath();
+        ctx.arc(pointer.x,pointer.y,r,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(145,185,161,${pulse*.22})`;
+        ctx.stroke();
+      }else pulse=0;
+    }
+    if(pointer.active||pulse>0){raf=requestAnimationFrame(draw)}
+    else{running=false;raf=0;ctx.clearRect(0,0,w,h)}
+  }
+  function wake(){if(!running){running=true;raf=requestAnimationFrame(draw)}}
+
+  function pos(e){
+    const t=e.touches&&e.touches[0];
+    const x=t?t.clientX:e.clientX, y=t?t.clientY:e.clientY;
+    if(Number.isFinite(x)&&Number.isFinite(y)){
+      pointer.x=x; pointer.y=y;
+    }
+  }
+  function down(e){
+    pos(e);
+    pointer.active=true;
+    pointer.pressure=(e.pressure>0?e.pressure:.5);
+    pointer.radius=Math.max(8,Math.max(e.width||0,e.height||0));
+    liveStatus?.classList.add('pressed');
+    wake();
+  }
+  function move(e){
+    pos(e);
+    if(e.pressure>0) pointer.pressure=e.pressure;
+    const c=Math.max(e.width||0,e.height||0);
+    if(c>0) pointer.radius=Math.max(8,c);
+  }
+  function up(e){
+    pos(e);
+    pointer.active=false;
+    pulse=1;
+    liveStatus?.classList.remove('pressed');
+    wake();
+  }
+  base.addEventListener('pointerdown',down,{passive:true});
+  base.addEventListener('pointermove',move,{passive:true});
+  base.addEventListener('pointerup',up,{passive:true});
+  base.addEventListener('pointercancel',up,{passive:true});
+  base.addEventListener('pointerleave',()=>{pointer.active=false;wake()},{passive:true});
+
+  let pm='',pl='',pw='',pt='';
+  function pct(v){return Number.isFinite(v)?Math.max(0,Math.min(100,v*100)).toFixed(0)+'%':'—'}
+  const showStatus=/[?&]debug/.test(location.search);
+  if(showStatus&&liveStatus)liveStatus.classList.add('on');
+  if(showStatus)setInterval(()=>{
+    const st=window.SUMI&&window.SUMI.state?window.SUMI.state():null;
+    if(!st)return;
+    const m=st.tray?'PALETTE':'READY';
+    const l='INK '+pct(st.ink), wq='WATER '+pct(st.water);
+    const t='C'+(st.contact||0).toFixed(0)+' R'+(st.radius||0).toFixed(0);
+    if(liveMode&&m!==pm){liveMode.textContent=m;pm=m}
+    if(liveLoad&&l!==pl){liveLoad.textContent=l;pl=l}
+    if(liveWater&&wq!==pw){liveWater.textContent=wq;pw=wq}
+    if(liveTouch&&t!==pt){liveTouch.textContent=t;pt=t}
+  },250);
+})();
+</script>
+
+</body>
+</html>
