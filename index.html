@@ -107,7 +107,7 @@ let W=0,H=0,DPR=1,K=1,UPP=1;   // UPP = logical units per css pixel
 ========================================================= */
 
 const CFG={
-  daySeconds:900,      // one full night > dawn > day > dusk loop
+  daySeconds:9000,      // one full night > dawn > day > dusk loop
   weatherMin:25,       // seconds a mood lasts (min)
   weatherMax:50,       // seconds a mood lasts (max)
   forceTime:null,      // freeze time: 0..1 or "night"|"dawn"|"day"|"dusk"
@@ -116,15 +116,15 @@ const CFG={
   lightning:true,
 
   headOffsetPx:80,     // very first touch only: where the rake starts, above your finger (css px)
-  maxHandlePx:220,     // longest handle; grabbing from farther pulls the rake in to this (css px)
+  maxHandlePx:760,     // longest handle; grabbing from farther pulls the rake in to this (css px)
   steerPx:16,          // how fast the rake turns to follow your stroke (css px; ~1000 = never turns)
-  fingerGapPx:18,      // two fingers: clear space kept under each fingertip (css px)
-  minTines:3,          // shortest rake head
+  fingerGapPx:64,      // two fingers: clear space kept under each fingertip (css px)
+  minTines:4,          // shortest rake head
   maxTines:61,         // longest rake head
 
-  petalLandChance:.0004, // per-frame chance a falling petal settles
-  petalRestMin:10,     // seconds a settled petal rests (min)
-  petalRestMax:35      // seconds a settled petal rests (max)
+  petalLandChance:.0008, // per-frame chance a falling petal settles
+  petalRestMin:240,     // seconds a settled petal rests (min)
+  petalRestMax:435      // seconds a settled petal rests (max)
 };
 
 const SAND=[201,186,165];
